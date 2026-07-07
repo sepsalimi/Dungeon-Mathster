@@ -9,6 +9,7 @@ interface RoomSceneProps {
 
 export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps) {
   const feedbackClass = feedback ? `scene-feedback--${feedback.kind}` : "";
+  const enemyAttackNonce = feedback?.kind === "enemy" ? feedback.nonce : null;
 
   return (
     <section
@@ -32,7 +33,16 @@ export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps
       <div className="floor-grid" />
 
       {enemy && (
-        <div className={`monster ${enemy.isBoss ? "monster--boss" : ""}`}>
+        <div
+          key={enemyAttackNonce ? `enemy-attack-${enemyAttackNonce}` : enemy.name}
+          className={[
+            "monster",
+            enemy.isBoss ? "monster--boss" : "",
+            enemyAttackNonce ? "monster--attacking" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <div className="monster-shadow" />
           <div className="monster-sprite">
             <span className="monster-horn monster-horn--left" />
@@ -63,12 +73,9 @@ export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps
         </div>
       )}
       {feedback?.kind === "enemy" && (
-        <>
-          <div key={`hurt-${feedback.nonce}`} className="hurt-flash" />
-          <div key={`damage-${feedback.nonce}`} className="damage-number">
-            -{feedback.amount ?? 0}
-          </div>
-        </>
+        <div key={`damage-${feedback.nonce}`} className="damage-number">
+          -{feedback.amount ?? 0}
+        </div>
       )}
       {feedback && feedback.kind !== "miss" && (
         <div key={`toast-${feedback.nonce}`} className="toast">

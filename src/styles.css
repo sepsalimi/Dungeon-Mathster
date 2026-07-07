@@ -327,6 +327,20 @@ button {
   width: 13rem;
   bottom: 8%;
 }
+.monster--attacking {
+  animation: monster-lunge 480ms cubic-bezier(0.2, 0.85, 0.2, 1) both;
+  z-index: 7;
+}
+
+.monster--attacking .monster-sprite {
+  animation: monster-idle 1.5s steps(2, end) infinite, monster-strike-squash 480ms ease-out both;
+  filter: drop-shadow(0 0 18px rgba(255, 43, 43, 0.6));
+}
+
+.monster--attacking .monster-mouth {
+  height: 1.05rem;
+  background: #38070b;
+}
 
 .monster-shadow {
   position: absolute;
@@ -1074,11 +1088,11 @@ p {
 .hurt-flash {
   position: absolute;
   inset: 0;
-  z-index: 11;
+  z-index: 45;
   pointer-events: none;
   background:
-    radial-gradient(circle at center, transparent 0 32%, rgba(255, 37, 37, 0.14) 55%, rgba(255, 37, 37, 0.42) 100%),
-    rgba(255, 0, 0, 0.16);
+    radial-gradient(circle at center, transparent 0 18%, rgba(255, 37, 37, 0.22) 48%, rgba(255, 37, 37, 0.62) 100%),
+    rgba(255, 0, 0, 0.24);
   animation: hurt-flash 520ms ease-out forwards;
 }
 
@@ -1161,3 +1175,17 @@ p {
 
 
 
+
+@keyframes monster-lunge {
+  0% { transform: translateX(-50%) translateY(0) scale(1); }
+  28% { transform: translateX(-50%) translateY(-18px) scale(1.1); }
+  48% { transform: translateX(-50%) translateY(34px) scale(1.22); }
+  68% { transform: translateX(-50%) translateY(8px) scale(1.06); }
+  100% { transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+@keyframes monster-strike-squash {
+  0%, 100% { transform: scale(1); }
+  42% { transform: scale(1.08, 0.92); }
+  58% { transform: scale(0.94, 1.12); }
+}
