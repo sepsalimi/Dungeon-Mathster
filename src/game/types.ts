@@ -50,9 +50,10 @@ export interface DoorChoice {
 }
 
 export interface FeedbackState {
-  kind: "hit" | "miss" | "enemy" | "buy" | "blocked";
+  kind: "hit" | "miss" | "enemy" | "buy" | "blocked" | "pause";
   message: string;
   nonce: number;
+  amount?: number;
 }
 
 export interface GameState {
@@ -65,6 +66,7 @@ export interface GameState {
   doors: DoorChoice[];
   feedback: FeedbackState | null;
   frozenUntil: number;
+  paused: boolean;
 }
 
 export type ShopUpgradeId =

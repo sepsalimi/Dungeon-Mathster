@@ -1,6 +1,7 @@
 import { BossIntro } from "./components/BossIntro";
 import { CombatView } from "./components/CombatView";
 import { DoorChoiceView } from "./components/DoorChoiceView";
+import { PauseOverlay } from "./components/PauseOverlay";
 import { RunEndView } from "./components/RunEndView";
 import { ShopView } from "./components/ShopView";
 import { StartScreen } from "./components/StartScreen";
@@ -44,6 +45,7 @@ export default function App() {
       {(game.state.phase === "victory" || game.state.phase === "defeat") && (
         <RunEndView state={game.state} onRestart={game.startRun} />
       )}
+      {game.state.paused && <PauseOverlay onResume={game.resumeGame} onRestart={game.startRun} />}
     </main>
   );
 }

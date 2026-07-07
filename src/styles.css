@@ -254,8 +254,8 @@ button {
 .monster {
   position: absolute;
   left: 50%;
-  bottom: 18%;
-  width: 9.5rem;
+  bottom: 10%;
+  width: 10.8rem;
   transform: translateX(-50%);
   display: grid;
   justify-items: center;
@@ -264,8 +264,8 @@ button {
 }
 
 .monster--boss {
-  width: 12rem;
-  bottom: 14%;
+  width: 13rem;
+  bottom: 8%;
 }
 
 .monster-shadow {
@@ -280,8 +280,8 @@ button {
 
 .monster-sprite {
   position: relative;
-  width: 6.8rem;
-  height: 6.8rem;
+  width: 7.7rem;
+  height: 7.7rem;
   background:
     linear-gradient(90deg, transparent 0 14%, #628a5a 14% 86%, transparent 86%),
     linear-gradient(#78a86d, #446d54);
@@ -293,8 +293,8 @@ button {
 }
 
 .monster--boss .monster-sprite {
-  width: 8.8rem;
-  height: 8.8rem;
+  width: 9.8rem;
+  height: 9.8rem;
   background:
     linear-gradient(90deg, transparent 0 12%, #8e4e72 12% 88%, transparent 88%),
     linear-gradient(#b26084, #563858);
@@ -389,17 +389,17 @@ button {
 .sword-slash {
   position: absolute;
   left: 50%;
-  top: 40%;
+  top: 43%;
   z-index: 8;
-  width: 11rem;
-  height: 1.35rem;
+  width: min(92vw, 24rem);
+  height: 2.4rem;
   background: linear-gradient(90deg, transparent, #f8f4de 24% 78%, transparent);
-  box-shadow: 0 0 22px rgba(255, 247, 206, 0.8);
+  box-shadow: 0 0 36px rgba(255, 247, 206, 0.95), 0 0 70px rgba(214, 75, 61, 0.45);
   transform: translate(-50%, -50%) rotate(-28deg) scaleX(0.1);
   animation: sword-swing 360ms ease-out forwards;
 }
 
-.miss-burst,
+.miss-overlay,
 .toast {
   position: absolute;
   left: 50%;
@@ -407,14 +407,32 @@ button {
   transform: translateX(-50%);
 }
 
-.miss-burst {
-  top: 37%;
-  padding: 0.3rem 0.65rem;
-  color: #2b1b20;
-  background: #f2d27d;
-  border: 3px solid #7a4337;
-  font-weight: 900;
-  animation: miss-pop 520ms ease-out forwards;
+.miss-overlay {
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  animation: miss-pop 640ms ease-out forwards;
+}
+
+.miss-overlay span {
+  position: relative;
+  z-index: 2;
+  color: #ff2b2b;
+  font-size: clamp(4rem, 22vw, 8.4rem);
+  font-weight: 1000;
+  text-shadow:
+    0 5px 0 #26080b,
+    0 0 22px rgba(255, 43, 43, 0.9);
+}
+
+.miss-overlay i {
+  position: absolute;
+  width: min(94vw, 27rem);
+  height: 2rem;
+  background: linear-gradient(90deg, transparent, #ffefcf 18% 82%, transparent);
+  box-shadow: 0 0 28px rgba(255, 239, 207, 0.95), 0 0 50px rgba(255, 43, 43, 0.5);
+  transform: rotate(18deg);
 }
 
 .toast,
@@ -983,3 +1001,101 @@ p {
   15%, 82% { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, 10px); }
 }
+
+.doors--single {
+  grid-template-columns: minmax(12rem, 18rem);
+  justify-content: center;
+}
+
+.doors--single .door {
+  min-height: 20rem;
+}
+
+.hurt-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, transparent 0 32%, rgba(255, 37, 37, 0.14) 55%, rgba(255, 37, 37, 0.42) 100%),
+    rgba(255, 0, 0, 0.16);
+  animation: hurt-flash 520ms ease-out forwards;
+}
+
+.damage-number {
+  position: absolute;
+  left: 50%;
+  top: 28%;
+  z-index: 12;
+  color: #ff3333;
+  font-size: clamp(2.8rem, 13vw, 5rem);
+  font-weight: 1000;
+  text-shadow: 0 4px 0 #26080b, 0 0 24px rgba(255, 51, 51, 0.9);
+  transform: translateX(-50%);
+  animation: damage-float 780ms ease-out forwards;
+}
+
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 7, 11, 0.76);
+  backdrop-filter: blur(5px);
+}
+
+.pause-panel {
+  width: min(100%, 24rem);
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  color: #fff8e7;
+  text-align: center;
+  background: #17131d;
+  border: 1px solid rgba(245, 239, 224, 0.16);
+  box-shadow: 0 10px 0 #050407, 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.pause-panel span {
+  color: #f0c56f;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.pause-panel h1 {
+  margin: 0;
+  font-size: clamp(2rem, 10vw, 3.2rem);
+  line-height: 0.95;
+}
+
+.pause-actions {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.secondary-action {
+  width: 100%;
+  min-height: 3rem;
+  color: #fff8e7;
+  background: #2b2230;
+  border: 2px solid rgba(245, 239, 224, 0.16);
+  box-shadow: 0 5px 0 #08070b;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+@keyframes hurt-flash {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes damage-float {
+  0% { opacity: 0; transform: translate(-50%, 18px) scale(0.82); }
+  25% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -44px) scale(1.08); }
+}
+

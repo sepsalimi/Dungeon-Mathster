@@ -8,15 +8,17 @@ interface DoorChoiceViewProps {
 }
 
 export function DoorChoiceView({ state, onChooseDoor, onRestart }: DoorChoiceViewProps) {
+  const hasSingleDoor = state.doors.length === 1;
+
   return (
     <div className="game-screen">
       <Hud state={state} onRestart={onRestart} />
       <section className="door-room" aria-label="Choose a dungeon door">
         <div className="door-copy">
           <span>Room {state.roomsCleared} cleared</span>
-          <h1>Choose a Door</h1>
+          <h1>{hasSingleDoor ? "The Boss Gate" : "Choose a Door"}</h1>
         </div>
-        <div className="doors">
+        <div className={hasSingleDoor ? "doors doors--single" : "doors"}>
           {state.doors.map((door, index) => (
             <button
               key={`${door.id}-${index}`}
@@ -25,7 +27,7 @@ export function DoorChoiceView({ state, onChooseDoor, onRestart }: DoorChoiceVie
               onClick={() => onChooseDoor(door)}
             >
               <span className={`door-icon door-icon--${door.icon}`} aria-hidden="true" />
-              <strong>{index === 0 ? "Left Door" : "Right Door"}</strong>
+              <strong>{hasSingleDoor ? "Enter" : index === 0 ? "Left Door" : "Right Door"}</strong>
               <small>{door.label}</small>
             </button>
           ))}

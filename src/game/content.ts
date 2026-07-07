@@ -63,14 +63,7 @@ export function makeDoorChoices(roomsCleared: number): DoorChoice[] {
   if (roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS) {
     return [
       {
-        id: "left-boss",
-        kind: "boss",
-        label: "Boss Gate",
-        icon: "skull",
-        tone: "danger",
-      },
-      {
-        id: "right-boss",
+        id: "boss-gate",
         kind: "boss",
         label: "Boss Gate",
         icon: "crown",

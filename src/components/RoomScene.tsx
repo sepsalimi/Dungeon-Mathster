@@ -57,11 +57,20 @@ export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps
 
       {feedback?.kind === "hit" && <div key={feedback.nonce} className="sword-slash" />}
       {feedback?.kind === "miss" && (
-        <div key={feedback.nonce} className="miss-burst">
-          MISS
+        <div key={feedback.nonce} className="miss-overlay">
+          <span>MISS</span>
+          <i />
         </div>
       )}
-      {feedback && (
+      {feedback?.kind === "enemy" && (
+        <>
+          <div key={`hurt-${feedback.nonce}`} className="hurt-flash" />
+          <div key={`damage-${feedback.nonce}`} className="damage-number">
+            -{feedback.amount ?? 0}
+          </div>
+        </>
+      )}
+      {feedback && feedback.kind !== "miss" && (
         <div key={`toast-${feedback.nonce}`} className="toast">
           {feedback.message}
         </div>
