@@ -22,11 +22,15 @@ export function Hud({ state, onRestart }: HudProps) {
         </div>
       </div>
       <div className="gold-pill" aria-label={`${state.player.gold} gold`}>
-        <span className="coin-icon" />
-        <strong>{state.player.gold}</strong>
+        <span className="coin-icon" aria-hidden="true" />
+        <span className="gold-text">
+          <small>Gold</small>
+          <strong>{state.player.gold}</strong>
+        </span>
       </div>
-      <button className="icon-button" type="button" onClick={onRestart} aria-label="Restart run">
-        R
+      <button className="restart-button" type="button" onClick={onRestart} aria-label="Start a new run">
+        <span aria-hidden="true">?</span>
+        <strong>New</strong>
       </button>
     </header>
   );

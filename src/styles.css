@@ -111,7 +111,7 @@ button {
 }
 
 .gold-pill,
-.icon-button {
+.restart-button {
   min-width: 3.15rem;
   height: 2.35rem;
   display: inline-flex;
@@ -124,18 +124,78 @@ button {
   box-shadow: 0 4px 0 #0b0910;
 }
 
-.icon-button {
-  min-width: 2.35rem;
+.restart-button {
+  min-width: 3.8rem;
+  flex-direction: column;
+  gap: 0.02rem;
   cursor: pointer;
 }
 
+.restart-button span {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.restart-button strong {
+  font-size: 0.62rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .coin-icon {
-  width: 0.8rem;
-  height: 0.8rem;
-  background: #e3b246;
-  border: 2px solid #7b4d1f;
+  position: relative;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  background: radial-gradient(circle at 35% 30%, #fff1a6 0 16%, #f2c84b 17% 62%, #a96a23 63% 100%);
+  border: 2px solid #6d3f16;
   border-radius: 50%;
-  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.18);
+  box-shadow:
+    inset -3px -3px 0 rgba(0, 0, 0, 0.2),
+    0 2px 0 #3d2414;
+}
+
+.coin-icon::before,
+.coin-icon::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: #f0b43a;
+  border: 2px solid #6d3f16;
+  z-index: -1;
+}
+
+.coin-icon::before {
+  width: 1.05rem;
+  height: 1.05rem;
+  left: -0.45rem;
+  bottom: -0.12rem;
+}
+
+.coin-icon::after {
+  width: 0.95rem;
+  height: 0.95rem;
+  right: -0.42rem;
+  bottom: -0.18rem;
+}
+
+.gold-text {
+  display: grid;
+  align-items: center;
+  justify-items: start;
+  line-height: 1;
+}
+
+.gold-text small {
+  color: #f0c56f;
+  font-size: 0.58rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.gold-text strong {
+  color: #fff8e7;
+  font-size: 1rem;
 }
 
 .room-scene {
@@ -1098,4 +1158,6 @@ p {
   25% { opacity: 1; transform: translate(-50%, 0) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -44px) scale(1.08); }
 }
+
+
 
