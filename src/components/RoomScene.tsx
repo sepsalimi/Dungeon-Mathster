@@ -77,7 +77,7 @@ export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps
           -{feedback.amount ?? 0}
         </div>
       )}
-      {feedback && feedback.kind !== "miss" && (
+      {feedback && feedback.kind !== "miss" && feedback.kind !== "enemy" && (
         <div key={`toast-${feedback.nonce}`} className="toast">
           {feedback.message}
         </div>
@@ -85,3 +85,4 @@ export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps
     </section>
   );
 }
+

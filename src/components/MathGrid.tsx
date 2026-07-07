@@ -3,16 +3,14 @@ import type { GridTile, Puzzle } from "../game/types";
 
 interface MathGridProps {
   puzzle: Puzzle;
+  startHintId?: string | null;
   onSubmitPath: (path: string[]) => void;
 }
 
-export function MathGrid({ puzzle, onSubmitPath }: MathGridProps) {
+export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const tileMap = useMemo(
-    () => new Map(puzzle.tiles.map((tile) => [tile.id, tile])),
-    [puzzle.tiles],
-  );
+  const tileMap = useMemo(() => new Map(puzzle.tiles.map((tile) => [tile.id, tile])), [puzzle.tiles]);
 
   useEffect(() => {
     setSelected([]);
@@ -22,18 +20,11 @@ export function MathGrid({ puzzle, onSubmitPath }: MathGridProps) {
   function addTile(id: string) {
     setSelected((current) => {
       const tile = tileMap.get(id);
-      if (!tile || current.includes(id)) {
-        return current;
-      }
-
-      if (current.length === 0) {
-        return tile.type === "number" ? [id] : current;
-      }
+      if (!tile || current.includes(id)) return current;
+      if (current.length === 0) return tile.type === "number" ? [id] : current;
 
       const last = tileMap.get(current[current.length - 1]);
-      if (!last || Math.abs(last.row - tile.row) + Math.abs(last.col - tile.col) !== 1) {
-        return current;
-      }
+      if (!last || Math.abs(last.row - tile.row) + Math.abs(last.col - tile.col) !== 1) return current;
 
       const expectedType = current.length % 2 === 0 ? "number" : "operator";
       return tile.type === expectedType ? [...current, id] : current;
@@ -50,25 +41,17 @@ export function MathGrid({ puzzle, onSubmitPath }: MathGridProps) {
     event.currentTarget.setPointerCapture(event.pointerId);
     setIsDragging(true);
     setSelected([]);
-    if (tile.type === "number") {
-      setSelected([tile.id]);
-    }
+    if (tile.type === "number") setSelected([tile.id]);
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (!isDragging) {
-      return;
-    }
+    if (!isDragging) return;
     const id = findTileFromPoint(event.clientX, event.clientY);
-    if (id) {
-      addTile(id);
-    }
+    if (id) addTile(id);
   }
 
   function finishSwipe() {
-    if (isDragging && selected.length > 0) {
-      onSubmitPath(selected);
-    }
+    if (isDragging && selected.length > 0) onSubmitPath(selected);
     setSelected([]);
     setIsDragging(false);
   }
@@ -90,21 +73,19 @@ export function MathGrid({ puzzle, onSubmitPath }: MathGridProps) {
         {puzzle.tiles.map((tile) => {
           const selectedIndex = selected.indexOf(tile.id);
           const isSelected = selectedIndex >= 0;
+          const isStartHint = tile.id === startHintId;
           return (
             <button
               key={tile.id}
               type="button"
-              className={[
-                "math-tile",
-                `math-tile--${tile.type}`,
-                isSelected ? "is-selected" : "",
-              ]
+              className={["math-tile", `math-tile--${tile.type}`, isSelected ? "is-selected" : "", isStartHint ? "is-start-hint" : ""]
                 .filter(Boolean)
                 .join(" ")}
               data-tile-id={tile.id}
               onPointerDown={(event) => handlePointerDown(event, tile)}
             >
               <span>{tile.value}</span>
+              {isStartHint && !isSelected && <b>Start</b>}
               {isSelected && <em>{selectedIndex + 1}</em>}
             </button>
           );

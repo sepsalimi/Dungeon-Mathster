@@ -29,9 +29,9 @@ export function Hud({ state, onRestart }: HudProps) {
         </span>
       </div>
       <button className="restart-button" type="button" onClick={onRestart} aria-label="Start a new run">
-        <span aria-hidden="true">?</span>
-        <strong>New</strong>
+        <strong>New Run</strong>
       </button>
     </header>
   );
 }
+

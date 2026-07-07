@@ -1,4 +1,4 @@
-import type { DoorChoice, EnemyState, ShopUpgrade } from "./types";
+import type { BargainOption, DoorChoice, EnemyState, ShopUpgrade } from "./types";
 
 export const MONSTER_REWARD = 18;
 export const BOSS_REWARD = 50;
@@ -7,47 +7,43 @@ export const MONSTER_ROOMS_BEFORE_BOSS = 3;
 const monsterNames = ["Moss Gnawer", "Cinder Imp", "Bone Wisp", "Slime Knight"];
 
 export const shopUpgrades: ShopUpgrade[] = [
+  { id: "heal", name: "Heal HP", description: "Restore 35 HP now.", cost: 15 },
+  { id: "maxHp", name: "Increase Max HP", description: "Gain 20 max HP and heal 20.", cost: 30 },
+  { id: "armor", name: "Armor", description: "Reduce monster attacks by 1.", cost: 25 },
+  { id: "freeze", name: "Freeze", description: "Stop attacks for 10 seconds next room.", cost: 20 },
+  { id: "sword", name: "Sword Upgrade", description: "Deal 1 extra damage per correct answer.", cost: 35 },
+];
+
+export const bargainOptions: BargainOption[] = [
   {
-    id: "heal",
-    name: "Heal HP",
-    description: "Restore 35 HP now.",
-    cost: 15,
+    id: "oracleLens",
+    name: "Oracle Lens",
+    upside: "The first number in every answer glows.",
+    downside: "Lose 20 max HP permanently.",
   },
   {
-    id: "maxHp",
-    name: "Increase Max HP",
-    description: "Gain 20 max HP and heal 20.",
-    cost: 30,
+    id: "negativeHeart",
+    name: "Negative Heart",
+    upside: "Gain 30 max HP and heal 30.",
+    downside: "Negative numbers enter the grid.",
   },
   {
-    id: "armor",
-    name: "Armor",
-    description: "Reduce monster attacks by 1.",
-    cost: 25,
+    id: "glassBlade",
+    name: "Glass Blade",
+    upside: "Double your sword damage.",
+    downside: "Your max HP is halved.",
   },
   {
-    id: "freeze",
-    name: "Freeze",
-    description: "Stop attacks for 10 seconds next room.",
-    cost: 20,
-  },
-  {
-    id: "sword",
-    name: "Sword Upgrade",
-    description: "Deal 1 extra damage per correct answer.",
-    cost: 35,
+    id: "coinHex",
+    name: "Coin Hex",
+    upside: "Heads: gain 1 sword damage.",
+    downside: "Tails: monsters deal 2 extra damage.",
   },
 ];
 
 export function makeEnemy(isBoss: boolean): EnemyState {
   if (isBoss) {
-    return {
-      name: "Count Calculus",
-      hp: 6,
-      maxHp: 6,
-      damage: 5,
-      isBoss: true,
-    };
+    return { name: "Count Calculus", hp: 6, maxHp: 6, damage: 5, isBoss: true };
   }
 
   return {
@@ -61,34 +57,10 @@ export function makeEnemy(isBoss: boolean): EnemyState {
 
 export function makeDoorChoices(roomsCleared: number): DoorChoice[] {
   if (roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS) {
-    return [
-      {
-        id: "boss-gate",
-        kind: "boss",
-        label: "Boss Gate",
-        icon: "crown",
-        tone: "danger",
-      },
-    ];
+    return [{ id: "boss-gate", kind: "boss", label: "Boss Gate", icon: "crown", tone: "danger" }];
   }
 
-  const usefulDoor: DoorChoice =
-    roomsCleared < 2 || Math.random() > 0.35
-      ? {
-          id: "useful-shop",
-          kind: "shop",
-          label: "Torch Shop",
-          icon: "shop",
-          tone: "safe",
-        }
-      : {
-          id: "useful-mystery",
-          kind: "mystery",
-          label: "Mystery",
-          icon: "spark",
-          tone: "rare",
-        };
-
+  const usefulDoor: DoorChoice = pickUsefulDoor(roomsCleared);
   const fightDoor: DoorChoice = {
     id: "fight-monster",
     kind: "monster",
@@ -98,4 +70,34 @@ export function makeDoorChoices(roomsCleared: number): DoorChoice[] {
   };
 
   return Math.random() > 0.5 ? [usefulDoor, fightDoor] : [fightDoor, usefulDoor];
+}
+
+function pickUsefulDoor(roomsCleared: number): DoorChoice {
+  if (roomsCleared >= 1 && Math.random() < 0.45) {
+    return {
+      id: "cursed-bargain",
+      kind: "bargain",
+      label: "Bargain",
+      icon: "curse",
+      tone: "rare",
+    };
+  }
+
+  if (roomsCleared < 2 || Math.random() > 0.35) {
+    return {
+      id: "useful-shop",
+      kind: "shop",
+      label: "Torch Shop",
+      icon: "shop",
+      tone: "safe",
+    };
+  }
+
+  return {
+    id: "useful-mystery",
+    kind: "mystery",
+    label: "Mystery",
+    icon: "spark",
+    tone: "rare",
+  };
 }

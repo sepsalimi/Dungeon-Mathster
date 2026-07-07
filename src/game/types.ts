@@ -1,10 +1,11 @@
 export type TileType = "number" | "operator";
-export type RoomKind = "monster" | "shop" | "boss" | "mystery";
+export type RoomKind = "monster" | "shop" | "boss" | "mystery" | "bargain";
 export type GamePhase =
   | "start"
   | "combat"
   | "door"
   | "shop"
+  | "bargain"
   | "bossIntro"
   | "victory"
   | "defeat";
@@ -31,6 +32,9 @@ export interface PlayerState {
   armor: number;
   swordDamage: number;
   freezeNextRoom: boolean;
+  revealStartTile: boolean;
+  negativesUnlocked: boolean;
+  extraDamageTaken: number;
 }
 
 export interface EnemyState {
@@ -76,9 +80,22 @@ export type ShopUpgradeId =
   | "freeze"
   | "sword";
 
+export type BargainId =
+  | "oracleLens"
+  | "negativeHeart"
+  | "glassBlade"
+  | "coinHex";
+
 export interface ShopUpgrade {
   id: ShopUpgradeId;
   name: string;
   description: string;
   cost: number;
+}
+
+export interface BargainOption {
+  id: BargainId;
+  name: string;
+  upside: string;
+  downside: string;
 }

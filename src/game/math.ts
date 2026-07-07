@@ -1,8 +1,14 @@
 import type { GridTile, Puzzle } from "./types";
 
-const numberRange = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const positiveNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const mixedNumbers = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-export function makePuzzle(size: number): Puzzle {
+interface PuzzleOptions {
+  allowNegative?: boolean;
+}
+
+export function makePuzzle(size: number, options: PuzzleOptions = {}): Puzzle {
+  const numberRange = options.allowNegative ? mixedNumbers : positiveNumbers;
   const pathLength = size === 3 ? 5 : 7;
   const answerPath = buildAnswerPath(size, pathLength);
   const pathNumbers = new Map<string, number>();
@@ -43,11 +49,7 @@ export function evaluatePath(path: string[], tiles: GridTile[]): number | null {
   }, 0);
 }
 
-export function isCorrectPath(
-  path: string[],
-  tiles: GridTile[],
-  target: number,
-): boolean {
+export function isCorrectPath(path: string[], tiles: GridTile[], target: number): boolean {
   return evaluatePath(path, tiles) === target;
 }
 
@@ -100,11 +102,7 @@ function buildAnswerPath(size: number, pathLength: number): string[] {
   return fallbackPath(size).slice(0, pathLength).map(([row, col]) => tileId(row, col));
 }
 
-function walkPath(
-  size: number,
-  path: Array<[number, number]>,
-  pathLength: number,
-): Array<[number, number]> | null {
+function walkPath(size: number, path: Array<[number, number]>, pathLength: number): Array<[number, number]> | null {
   if (path.length === pathLength) {
     return path;
   }
@@ -132,8 +130,7 @@ function neighbors(row: number, col: number, size: number): Array<[number, numbe
     [row, col - 1],
     [row, col + 1],
   ].filter(
-    ([nextRow, nextCol]) =>
-      nextRow >= 0 && nextCol >= 0 && nextRow < size && nextCol < size,
+    ([nextRow, nextCol]) => nextRow >= 0 && nextCol >= 0 && nextRow < size && nextCol < size,
   ) as Array<[number, number]>;
 }
 
@@ -151,24 +148,10 @@ function allNumberCells(size: number): Array<[number, number]> {
 
 function fallbackPath(size: number): Array<[number, number]> {
   if (size === 3) {
-    return [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-      [1, 2],
-      [2, 2],
-    ];
+    return [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2]];
   }
 
-  return [
-    [0, 0],
-    [0, 1],
-    [0, 2],
-    [0, 3],
-    [1, 3],
-    [2, 3],
-    [3, 3],
-  ];
+  return [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3], [2, 3], [3, 3]];
 }
 
 function manhattanDistance(a: GridTile, b: GridTile): number {

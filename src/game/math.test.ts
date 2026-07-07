@@ -51,4 +51,17 @@ describe("math puzzle generation", () => {
 
     expect(evaluatePath(puzzle.answerPath, puzzle.tiles)).toBe(13);
   });
+  it("can generate valid puzzles with negative number tiles", () => {
+    let sawNegative = false;
+
+    for (let index = 0; index < 75; index += 1) {
+      const puzzle = makePuzzle(3, { allowNegative: true });
+      sawNegative ||= puzzle.tiles.some((tile) => tile.type === "number" && Number(tile.value) < 0);
+
+      expect(isValidPathShape(puzzle.answerPath, puzzle.tiles)).toBe(true);
+      expect(isCorrectPath(puzzle.answerPath, puzzle.tiles, puzzle.target)).toBe(true);
+    }
+
+    expect(sawNegative).toBe(true);
+  });
 });
