@@ -11,6 +11,7 @@ export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps
   const feedbackClass = feedback ? `scene-feedback--${feedback.kind}` : "";
   const enemyAttackNonce = feedback?.kind === "enemy" ? feedback.nonce : null;
   const hitNonce = feedback?.kind === "hit" ? feedback.nonce : null;
+  const enemyHpPercent = enemy ? Math.max(0, Math.min(100, (enemy.hp / enemy.maxHp) * 100)) : 0;
 
   return (
     <section
@@ -51,9 +52,11 @@ export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps
           <div className="enemy-plate">
             <strong>{enemy.name}</strong>
             <div className="enemy-health">
-              {Array.from({ length: enemy.maxHp }, (_, index) => (
-                <span key={index} className={index < enemy.hp ? "enemy-heart is-full" : "enemy-heart"} />
-              ))}
+              <span className="enemy-health-fill" style={{ width: `${enemyHpPercent}%` }} />
+              <span className="enemy-health-marker enemy-health-marker--one" />
+              <span className="enemy-health-marker enemy-health-marker--two" />
+              <span className="enemy-health-marker enemy-health-marker--three" />
+              <span className="enemy-health-marker enemy-health-marker--four" />
             </div>
           </div>
         </div>

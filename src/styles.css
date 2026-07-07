@@ -435,22 +435,46 @@ button {
 }
 
 .enemy-health {
-  display: flex;
-  justify-content: center;
-  gap: 0.2rem;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 0.62rem;
   margin-top: 0.25rem;
-}
-
-.enemy-heart {
-  width: 0.55rem;
-  height: 0.55rem;
   background: #2e2631;
   border: 1px solid #5e4b56;
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.24);
 }
 
-.enemy-heart.is-full {
-  background: #d64b3d;
-  border-color: #f08d69;
+.enemy-health-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #df4d3f, #f0a15f);
+  box-shadow: 0 0 12px rgba(240, 141, 105, 0.42);
+  transition: width 220ms ease-out;
+}
+
+.enemy-health-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 238, 207, 0.26);
+}
+
+.enemy-health-marker--one {
+  left: 20%;
+}
+
+.enemy-health-marker--two {
+  left: 40%;
+}
+
+.enemy-health-marker--three {
+  left: 60%;
+}
+
+.enemy-health-marker--four {
+  left: 80%;
 }
 
 .sword-slash {
@@ -1174,9 +1198,9 @@ p {
 
 @keyframes monster-lunge {
   0% { transform: translateX(-50%) translateY(0) scale(1); }
-  28% { transform: translateX(-50%) translateY(-18px) scale(1.1); }
-  48% { transform: translateX(-50%) translateY(34px) scale(1.22); }
-  68% { transform: translateX(-50%) translateY(8px) scale(1.06); }
+  20% { transform: translateX(-50%) translateY(-54px) scale(1.18); }
+  46% { transform: translateX(-50%) translateY(96px) scale(1.48); }
+  64% { transform: translateX(-50%) translateY(22px) scale(1.16); }
   100% { transform: translateX(-50%) translateY(0) scale(1); }
 }
 
@@ -1437,9 +1461,9 @@ p {
 
 @keyframes monster-hurt {
   0% { transform: translateX(-50%) translate(0, 0) scale(1); }
-  18% { transform: translateX(-50%) translate(18px, -4px) scale(1.04); }
-  34% { transform: translateX(-50%) translate(-24px, 5px) scale(0.96); }
-  55% { transform: translateX(-50%) translate(15px, 0) scale(1.02); }
+  14% { transform: translateX(-50%) translate(34px, -20px) rotate(4deg) scale(1.1); }
+  32% { transform: translateX(-50%) translate(-42px, 13px) rotate(-5deg) scale(0.92); }
+  54% { transform: translateX(-50%) translate(24px, -8px) rotate(2deg) scale(1.04); }
   100% { transform: translateX(-50%) translate(0, 0) scale(1); }
 }
 

@@ -7,6 +7,7 @@ describe("math puzzle generation", () => {
       const puzzle = makePuzzle(3);
 
       expect(puzzle.tiles).toHaveLength(9);
+      expect(puzzle.answerPath).toHaveLength(3);
       expect(isValidPathShape(puzzle.answerPath, puzzle.tiles)).toBe(true);
       expect(isCorrectPath(puzzle.answerPath, puzzle.tiles, puzzle.target)).toBe(true);
     }

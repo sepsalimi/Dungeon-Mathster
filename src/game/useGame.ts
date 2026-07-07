@@ -39,7 +39,10 @@ const initialState: GameState = {
 
 interface MusicState {
   interval: number;
+  theme: MusicTheme;
 }
+
+type MusicTheme = "fight" | "boss" | "door" | "shop" | "bargain";
 
 export function useGame() {
   const [state, setState] = useState<GameState>(initialState);
@@ -47,6 +50,7 @@ export function useGame() {
   const audioContext = useRef<AudioContext | null>(null);
   const music = useRef<MusicState | null>(null);
   const mutedRef = useRef(false);
+  const musicTheme = useRef<MusicTheme>("fight");
 
   const makeRunPuzzle = useCallback((size: number, player: PlayerState) => {
     return makePuzzle(size, { allowNegative: player.negativesUnlocked });
@@ -54,7 +58,7 @@ export function useGame() {
 
   const ensureAudio = useCallback(() => {
     primeAudio(audioContext);
-    startMusic(audioContext, music, mutedRef);
+    startMusic(audioContext, music, mutedRef, musicTheme.current);
   }, []);
 
   const startRun = useCallback(() => {
@@ -93,7 +97,7 @@ export function useGame() {
         stopMusic(music);
       } else {
         primeAudio(audioContext);
-        startMusic(audioContext, music, mutedRef);
+        startMusic(audioContext, music, mutedRef, musicTheme.current);
       }
       return next;
     });
@@ -304,6 +308,17 @@ export function useGame() {
   }, [state.phase]);
 
   useEffect(() => {
+    const nextTheme = getMusicTheme(state);
+    if (!nextTheme) return;
+    musicTheme.current = nextTheme;
+    if (!audioContext.current || mutedRef.current) return;
+    if (music.current?.theme !== nextTheme) {
+      stopMusic(music);
+      startMusic(audioContext, music, mutedRef, nextTheme);
+    }
+  }, [state.phase, state.enemy?.isBoss]);
+
+  useEffect(() => {
     if (state.phase !== "combat" || !state.enemy || state.paused) return;
 
     const timer = window.setInterval(() => {
@@ -385,22 +400,25 @@ function startMusic(
   audioContext: MutableRefObject<AudioContext | null>,
   music: MutableRefObject<MusicState | null>,
   mutedRef: MutableRefObject<boolean>,
+  theme: MusicTheme,
 ) {
   const context = audioContext.current;
   if (!context || context.state !== "running" || music.current || mutedRef.current) return;
 
-  const bass = [82.41, 98, 110, 73.42, 82.41, 65.41];
-  const melody = [196, 174.61, 146.83, 164.81, 130.81, 146.83];
+  const pattern = musicPatterns[theme];
   let index = 0;
   const interval = window.setInterval(() => {
-    playTone(context, bass[index % bass.length], 0.015, 0.22, "triangle", 0.026);
-    if (index % 2 === 0) {
-      window.setTimeout(() => playTone(context, melody[index % melody.length], 0.015, 0.16, "sine", 0.018), 120);
+    playTone(context, pattern.bass[index % pattern.bass.length], 0.025, pattern.beat * 0.00048, pattern.bassType, pattern.volume);
+    if (index % pattern.melodyEvery === 0) {
+      window.setTimeout(
+        () => playTone(context, pattern.melody[index % pattern.melody.length], 0.025, pattern.beat * 0.00034, "sine", pattern.volume * 0.82),
+        pattern.beat * 0.24,
+      );
     }
     index += 1;
-  }, 520);
+  }, pattern.beat);
 
-  music.current = { interval };
+  music.current = { interval, theme };
 }
 
 function stopMusic(music: MutableRefObject<MusicState | null>) {
@@ -444,3 +462,61 @@ function playTone(context: AudioContext, frequency: number, attack: number, dura
   oscillator.start(now);
   oscillator.stop(now + duration + 0.02);
 }
+function getMusicTheme(state: GameState): MusicTheme | null {
+  if (state.phase === "combat") return state.enemy?.isBoss ? "boss" : "fight";
+  if (state.phase === "bossIntro") return "boss";
+  if (state.phase === "door") return "door";
+  if (state.phase === "shop") return "shop";
+  if (state.phase === "bargain") return "bargain";
+  return null;
+}
+
+const musicPatterns: Record<MusicTheme, {
+  bass: number[];
+  melody: number[];
+  beat: number;
+  volume: number;
+  melodyEvery: number;
+  bassType: OscillatorType;
+}> = {
+  fight: {
+    bass: [82.41, 98, 110, 73.42, 82.41, 65.41],
+    melody: [196, 174.61, 146.83, 164.81, 130.81, 146.83],
+    beat: 560,
+    volume: 0.02,
+    melodyEvery: 2,
+    bassType: "triangle",
+  },
+  boss: {
+    bass: [65.41, 65.41, 73.42, 61.74, 55, 61.74],
+    melody: [130.81, 146.83, 123.47, 98],
+    beat: 430,
+    volume: 0.026,
+    melodyEvery: 2,
+    bassType: "sawtooth",
+  },
+  door: {
+    bass: [98, 123.47, 146.83, 123.47],
+    melody: [246.94, 293.66, 261.63, 220],
+    beat: 760,
+    volume: 0.018,
+    melodyEvery: 1,
+    bassType: "triangle",
+  },
+  shop: {
+    bass: [110, 146.83, 164.81, 146.83],
+    melody: [329.63, 293.66, 246.94, 293.66],
+    beat: 700,
+    volume: 0.017,
+    melodyEvery: 1,
+    bassType: "sine",
+  },
+  bargain: {
+    bass: [73.42, 69.3, 61.74, 69.3],
+    melody: [155.56, 146.83, 123.47, 116.54],
+    beat: 640,
+    volume: 0.021,
+    melodyEvery: 2,
+    bassType: "triangle",
+  },
+};

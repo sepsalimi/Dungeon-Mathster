@@ -9,7 +9,7 @@ interface PuzzleOptions {
 
 export function makePuzzle(size: number, options: PuzzleOptions = {}): Puzzle {
   const numberRange = options.allowNegative ? mixedNumbers : positiveNumbers;
-  const pathLength = size === 3 ? 5 : 7;
+  const pathLength = size === 3 ? 3 : 7;
   const answerPath = buildAnswerPath(size, pathLength);
   const pathNumbers = new Map<string, number>();
 
@@ -148,7 +148,7 @@ function allNumberCells(size: number): Array<[number, number]> {
 
 function fallbackPath(size: number): Array<[number, number]> {
   if (size === 3) {
-    return [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2]];
+    return [[0, 0], [0, 1], [0, 2]];
   }
 
   return [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3], [2, 3], [3, 3]];
