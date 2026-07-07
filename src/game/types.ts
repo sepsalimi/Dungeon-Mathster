@@ -35,6 +35,7 @@ export interface PlayerState {
   revealStartTile: boolean;
   negativesUnlocked: boolean;
   extraDamageTaken: number;
+  lifesteal: number;
 }
 
 export interface EnemyState {
@@ -73,18 +74,8 @@ export interface GameState {
   paused: boolean;
 }
 
-export type ShopUpgradeId =
-  | "heal"
-  | "maxHp"
-  | "armor"
-  | "freeze"
-  | "sword";
-
-export type BargainId =
-  | "oracleLens"
-  | "negativeHeart"
-  | "glassBlade"
-  | "coinHex";
+export type ShopUpgradeId = "heal" | "maxHp" | "armor" | "freeze" | "sword";
+export type BargainId = "oracleLens" | "negativeHeart" | "glassBlade" | "coinHex";
 
 export interface ShopUpgrade {
   id: ShopUpgradeId;

@@ -10,24 +10,29 @@ import { useGame } from "./game/useGame";
 
 export default function App() {
   const game = useGame();
+  const hudControls = {
+    isMuted: game.isMuted,
+    onPause: game.pauseGame,
+    onToggleMute: game.toggleMute,
+  };
 
   return (
     <main className="app-shell">
       {game.state.phase === "start" && <StartScreen onStart={game.startRun} />}
       {game.state.phase === "combat" && (
-        <CombatView state={game.state} onSubmitPath={game.submitPath} onRestart={game.startRun} />
+        <CombatView state={game.state} onSubmitPath={game.submitPath} {...hudControls} />
       )}
       {game.state.phase === "door" && (
-        <DoorChoiceView state={game.state} onChooseDoor={game.chooseDoor} onRestart={game.startRun} />
+        <DoorChoiceView state={game.state} onChooseDoor={game.chooseDoor} {...hudControls} />
       )}
       {game.state.phase === "shop" && (
-        <ShopView state={game.state} onBuyUpgrade={game.buyUpgrade} onContinue={game.leaveShop} onRestart={game.startRun} />
+        <ShopView state={game.state} onBuyUpgrade={game.buyUpgrade} onContinue={game.leaveShop} {...hudControls} />
       )}
       {game.state.phase === "bargain" && (
-        <BargainView state={game.state} onTakeBargain={game.takeBargain} onRestart={game.startRun} />
+        <BargainView state={game.state} onTakeBargain={game.takeBargain} {...hudControls} />
       )}
       {game.state.phase === "bossIntro" && (
-        <BossIntro state={game.state} onContinue={game.startBossFight} onRestart={game.startRun} />
+        <BossIntro state={game.state} onContinue={game.startBossFight} {...hudControls} />
       )}
       {(game.state.phase === "victory" || game.state.phase === "defeat") && (
         <RunEndView state={game.state} onRestart={game.startRun} />

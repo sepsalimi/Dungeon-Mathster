@@ -21,6 +21,7 @@ const initialPlayer: PlayerState = {
   revealStartTile: false,
   negativesUnlocked: false,
   extraDamageTaken: 0,
+  lifesteal: 0,
 };
 
 const initialState: GameState = {
@@ -38,22 +39,26 @@ const initialState: GameState = {
 
 interface MusicState {
   interval: number;
-  drone: OscillatorNode;
-  droneGain: GainNode;
 }
 
 export function useGame() {
   const [state, setState] = useState<GameState>(initialState);
+  const [isMuted, setIsMuted] = useState(false);
   const audioContext = useRef<AudioContext | null>(null);
   const music = useRef<MusicState | null>(null);
+  const mutedRef = useRef(false);
 
   const makeRunPuzzle = useCallback((size: number, player: PlayerState) => {
     return makePuzzle(size, { allowNegative: player.negativesUnlocked });
   }, []);
 
-  const startRun = useCallback(() => {
+  const ensureAudio = useCallback(() => {
     primeAudio(audioContext);
-    startMusic(audioContext, music);
+    startMusic(audioContext, music, mutedRef);
+  }, []);
+
+  const startRun = useCallback(() => {
+    ensureAudio();
     window.history.replaceState({ dungeonMathster: true }, "");
     window.history.pushState({ dungeonMathsterPause: true }, "");
     setState({
@@ -63,37 +68,51 @@ export function useGame() {
       enemy: makeEnemy(false),
       puzzle: makePuzzle(3),
     });
+  }, [ensureAudio]);
+
+  const pauseGame = useCallback(() => {
+    setState((current) => {
+      if (current.phase === "start" || current.phase === "victory" || current.phase === "defeat" || current.paused) {
+        return current;
+      }
+      return { ...current, paused: true, feedback: { kind: "pause", message: "Paused", nonce: Date.now() } };
+    });
   }, []);
 
   const resumeGame = useCallback(() => {
-    primeAudio(audioContext);
-    startMusic(audioContext, music);
+    ensureAudio();
     window.history.pushState({ dungeonMathsterPause: true }, "");
     setState((current) => ({ ...current, paused: false, feedback: null }));
+  }, [ensureAudio]);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((current) => {
+      const next = !current;
+      mutedRef.current = next;
+      if (next) {
+        stopMusic(music);
+      } else {
+        primeAudio(audioContext);
+        startMusic(audioContext, music, mutedRef);
+      }
+      return next;
+    });
   }, []);
 
   const startBossFight = useCallback(() => {
-    primeAudio(audioContext);
-    startMusic(audioContext, music);
+    ensureAudio();
     setState((current) => ({
       ...current,
       phase: "combat",
       paused: false,
-      feedback: {
-        kind: "blocked",
-        message: "Count Calculus raises the final grid.",
-        nonce: Date.now(),
-      },
+      feedback: { kind: "blocked", message: "Count Calculus raises the final grid.", nonce: Date.now() },
     }));
-  }, []);
+  }, [ensureAudio]);
 
   const submitPath = useCallback((path: string[]) => {
-    primeAudio(audioContext);
-    startMusic(audioContext, music);
+    ensureAudio();
     setState((current) => {
-      if (current.paused || current.phase !== "combat" || !current.enemy || !current.puzzle) {
-        return current;
-      }
+      if (current.paused || current.phase !== "combat" || !current.enemy || !current.puzzle) return current;
 
       const correct = isCorrectPath(path, current.puzzle.tiles, current.puzzle.target);
       const gridSize = current.enemy.isBoss ? 4 : 3;
@@ -107,19 +126,15 @@ export function useGame() {
       }
 
       const nextHp = Math.max(0, current.enemy.hp - current.player.swordDamage);
-      const defeated = nextHp <= 0;
+      const healedPlayer = applyLifesteal(current.player);
 
-      if (!defeated) {
+      if (nextHp > 0) {
         return {
           ...current,
           enemy: { ...current.enemy, hp: nextHp },
-          puzzle: makeRunPuzzle(gridSize, current.player),
-          feedback: {
-            kind: "hit",
-            message: `Sword hit for ${current.player.swordDamage}.`,
-            nonce: Date.now(),
-            amount: current.player.swordDamage,
-          },
+          player: healedPlayer,
+          puzzle: makeRunPuzzle(gridSize, healedPlayer),
+          feedback: { kind: "hit", message: "", nonce: Date.now(), amount: current.player.swordDamage },
         };
       }
 
@@ -130,10 +145,14 @@ export function useGame() {
           phase: "victory",
           enemy: { ...current.enemy, hp: 0 },
           puzzle: null,
-          player: { ...current.player, gold: current.player.gold + BOSS_REWARD },
+          player: {
+            ...healedPlayer,
+            gold: healedPlayer.gold + BOSS_REWARD,
+            lifesteal: Math.max(healedPlayer.lifesteal, 1),
+          },
           feedback: {
             kind: "hit",
-            message: "The boss falls. Floor 1 is clear.",
+            message: "Lifesteal relic found. Heal on every hit.",
             nonce: Date.now(),
             amount: current.player.swordDamage,
           },
@@ -148,7 +167,7 @@ export function useGame() {
         enemy: { ...current.enemy, hp: 0 },
         puzzle: null,
         doors: makeDoorChoices(roomsCleared),
-        player: { ...current.player, gold: current.player.gold + MONSTER_REWARD },
+        player: { ...healedPlayer, gold: healedPlayer.gold + MONSTER_REWARD },
         feedback: {
           kind: "hit",
           message: `Monster defeated. +${MONSTER_REWARD} gold.`,
@@ -157,11 +176,10 @@ export function useGame() {
         },
       };
     });
-  }, [makeRunPuzzle]);
+  }, [ensureAudio, makeRunPuzzle]);
 
   const chooseDoor = useCallback((door: DoorChoice) => {
-    primeAudio(audioContext);
-    startMusic(audioContext, music);
+    ensureAudio();
     if (door.kind === "shop") {
       setState((current) => ({
         ...current,
@@ -197,34 +215,15 @@ export function useGame() {
         },
         feedback: { kind: "buy", message: "Mystery room: +20 HP and +5 gold.", nonce: Date.now() },
       }));
-      window.setTimeout(() => {
-        setState((current) => startNextFight(current, makeRunPuzzle));
-      }, 850);
+      window.setTimeout(() => setState((current) => startNextFight(current, makeRunPuzzle)), 850);
       return;
     }
 
-    setState((current) => {
-      const isBoss = door.kind === "boss";
-      const frozenUntil = current.player.freezeNextRoom ? Date.now() + 10_000 : 0;
-      return {
-        ...current,
-        phase: isBoss ? "bossIntro" : "combat",
-        paused: false,
-        enemy: makeEnemy(isBoss),
-        puzzle: makeRunPuzzle(isBoss ? 4 : 3, current.player),
-        doors: [],
-        frozenUntil,
-        player: { ...current.player, freezeNextRoom: false },
-        feedback: isBoss
-          ? { kind: "blocked", message: "The boss waits behind the iron sum gate.", nonce: Date.now() }
-          : null,
-      };
-    });
-  }, [makeRunPuzzle]);
+    setState((current) => startSpecificFight(current, door.kind === "boss", makeRunPuzzle));
+  }, [ensureAudio, makeRunPuzzle]);
 
   const takeBargain = useCallback((id: BargainId) => {
-    primeAudio(audioContext);
-    startMusic(audioContext, music);
+    ensureAudio();
     setState((current) => {
       const player = { ...current.player };
       let message = bargainOptions.find((option) => option.id === id)?.name ?? "Bargain taken";
@@ -235,21 +234,18 @@ export function useGame() {
         player.hp = Math.min(player.hp, player.maxHp);
         message = "Oracle Lens taken. First answer tile now glows.";
       }
-
       if (id === "negativeHeart") {
         player.maxHp += 30;
         player.hp = Math.min(player.maxHp, player.hp + 30);
         player.negativesUnlocked = true;
         message = "Negative Heart taken. More HP, stranger numbers.";
       }
-
       if (id === "glassBlade") {
         player.swordDamage = Math.max(1, player.swordDamage * 2);
         player.maxHp = Math.max(1, Math.floor(player.maxHp / 2));
         player.hp = Math.min(player.hp, player.maxHp);
         message = "Glass Blade taken. Damage doubled, health halved.";
       }
-
       if (id === "coinHex") {
         if (Math.random() < 0.5) {
           player.swordDamage += 1;
@@ -260,20 +256,12 @@ export function useGame() {
         }
       }
 
-      return startNextFight(
-        {
-          ...current,
-          player,
-          feedback: { kind: "buy", message, nonce: Date.now() },
-        },
-        makeRunPuzzle,
-      );
+      return startNextFight({ ...current, player, feedback: { kind: "buy", message, nonce: Date.now() } }, makeRunPuzzle);
     });
-  }, [makeRunPuzzle]);
+  }, [ensureAudio, makeRunPuzzle]);
 
   const buyUpgrade = useCallback((id: ShopUpgradeId) => {
-    primeAudio(audioContext);
-    startMusic(audioContext, music);
+    ensureAudio();
     const upgrade = shopUpgrades.find((candidate) => candidate.id === id);
     if (!upgrade) return;
 
@@ -294,38 +282,25 @@ export function useGame() {
 
       return { ...current, player, feedback: { kind: "buy", message: `${upgrade.name} purchased.`, nonce: Date.now() } };
     });
-  }, []);
+  }, [ensureAudio]);
 
   const leaveShop = useCallback(() => {
-    primeAudio(audioContext);
-    startMusic(audioContext, music);
+    ensureAudio();
     setState((current) => startNextFight(current, makeRunPuzzle));
-  }, [makeRunPuzzle]);
+  }, [ensureAudio, makeRunPuzzle]);
 
   useEffect(() => {
-    const onPopState = () => {
-      setState((current) => {
-        if (current.phase === "start" || current.phase === "victory" || current.phase === "defeat" || current.paused) {
-          return current;
-        }
-
-        window.setTimeout(() => window.history.pushState({ dungeonMathsterPause: true }, ""), 0);
-        return { ...current, paused: true, feedback: { kind: "pause", message: "Paused", nonce: Date.now() } };
-      });
-    };
-
+    const onPopState = () => pauseGame();
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+  }, [pauseGame]);
 
   useEffect(() => {
-    if (state.feedback) playFeedback(audioContext, state.feedback);
+    if (state.feedback) playFeedback(audioContext, state.feedback, mutedRef);
   }, [state.feedback?.nonce]);
 
   useEffect(() => {
-    if (state.phase === "defeat" || state.phase === "victory" || state.phase === "start") {
-      stopMusic(music);
-    }
+    if (state.phase === "defeat" || state.phase === "victory" || state.phase === "start") stopMusic(music);
   }, [state.phase]);
 
   useEffect(() => {
@@ -356,6 +331,7 @@ export function useGame() {
 
   return {
     state,
+    isMuted,
     startRun,
     submitPath,
     chooseDoor,
@@ -363,26 +339,39 @@ export function useGame() {
     leaveShop,
     startBossFight,
     resumeGame,
+    pauseGame,
+    toggleMute,
     takeBargain,
   };
 }
 
-function startNextFight(
+function startNextFight(current: GameState, makeRunPuzzle: (size: number, player: PlayerState) => ReturnType<typeof makePuzzle>): GameState {
+  const shouldBoss = current.roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS;
+  return startSpecificFight(current, shouldBoss, makeRunPuzzle);
+}
+
+function startSpecificFight(
   current: GameState,
+  isBoss: boolean,
   makeRunPuzzle: (size: number, player: PlayerState) => ReturnType<typeof makePuzzle>,
 ): GameState {
-  const shouldBoss = current.roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS;
   const frozenUntil = current.player.freezeNextRoom ? Date.now() + 10_000 : 0;
   return {
     ...current,
-    phase: shouldBoss ? "bossIntro" : "combat",
+    phase: isBoss ? "bossIntro" : "combat",
     paused: false,
-    enemy: makeEnemy(shouldBoss),
-    puzzle: makeRunPuzzle(shouldBoss ? 4 : 3, current.player),
+    enemy: makeEnemy(isBoss),
+    puzzle: makeRunPuzzle(isBoss ? 4 : 3, current.player),
     doors: [],
     frozenUntil,
     player: { ...current.player, freezeNextRoom: false },
+    feedback: isBoss ? { kind: "blocked", message: "The boss waits behind the iron sum gate.", nonce: Date.now() } : current.feedback,
   };
+}
+
+function applyLifesteal(player: PlayerState): PlayerState {
+  if (player.lifesteal <= 0 || player.hp <= 0) return player;
+  return { ...player, hp: Math.min(player.maxHp, player.hp + player.lifesteal) };
 }
 
 function primeAudio(audioContext: MutableRefObject<AudioContext | null>) {
@@ -392,65 +381,55 @@ function primeAudio(audioContext: MutableRefObject<AudioContext | null>) {
   void audioContext.current.resume();
 }
 
-function startMusic(audioContext: MutableRefObject<AudioContext | null>, music: MutableRefObject<MusicState | null>) {
+function startMusic(
+  audioContext: MutableRefObject<AudioContext | null>,
+  music: MutableRefObject<MusicState | null>,
+  mutedRef: MutableRefObject<boolean>,
+) {
   const context = audioContext.current;
-  if (!context || context.state !== "running" || music.current) return;
+  if (!context || context.state !== "running" || music.current || mutedRef.current) return;
 
-  const drone = context.createOscillator();
-  const droneGain = context.createGain();
-  drone.type = "sawtooth";
-  drone.frequency.setValueAtTime(55, context.currentTime);
-  droneGain.gain.setValueAtTime(0.018, context.currentTime);
-  drone.connect(droneGain);
-  droneGain.connect(context.destination);
-  drone.start();
-
-  const notes = [110, 130.81, 98, 146.83, 82.41, 98];
+  const bass = [82.41, 98, 110, 73.42, 82.41, 65.41];
+  const melody = [196, 174.61, 146.83, 164.81, 130.81, 146.83];
   let index = 0;
   const interval = window.setInterval(() => {
-    playTone(context, notes[index % notes.length], 0.02, 0.28, "triangle", 0.045);
+    playTone(context, bass[index % bass.length], 0.015, 0.22, "triangle", 0.026);
+    if (index % 2 === 0) {
+      window.setTimeout(() => playTone(context, melody[index % melody.length], 0.015, 0.16, "sine", 0.018), 120);
+    }
     index += 1;
-  }, 620);
+  }, 520);
 
-  music.current = { interval, drone, droneGain };
+  music.current = { interval };
 }
 
 function stopMusic(music: MutableRefObject<MusicState | null>) {
   if (!music.current) return;
   window.clearInterval(music.current.interval);
-  music.current.droneGain.gain.exponentialRampToValueAtTime(0.001, music.current.droneGain.context.currentTime + 0.08);
-  music.current.drone.stop(music.current.droneGain.context.currentTime + 0.1);
   music.current = null;
 }
 
-function playFeedback(audioContext: MutableRefObject<AudioContext | null>, feedback: FeedbackState) {
+function playFeedback(audioContext: MutableRefObject<AudioContext | null>, feedback: FeedbackState, mutedRef: MutableRefObject<boolean>) {
   const context = audioContext.current;
-  if (!context || context.state !== "running") return;
+  if (!context || context.state !== "running" || mutedRef.current) return;
 
   if (feedback.kind === "hit") {
-    playTone(context, 180, 0.03, 0.08, "sawtooth");
-    window.setTimeout(() => playTone(context, 520, 0.02, 0.07, "triangle"), 45);
+    playTone(context, 960, 0.004, 0.055, "square", 0.13);
+    window.setTimeout(() => playTone(context, 420, 0.006, 0.08, "sawtooth", 0.08), 32);
   }
-  if (feedback.kind === "miss") playTone(context, 110, 0.05, 0.12, "square");
+  if (feedback.kind === "miss") playTone(context, 260, 0.02, 0.13, "sine", 0.045);
   if (feedback.kind === "enemy") {
-    playTone(context, 72, 0.06, 0.16, "sawtooth");
-    window.setTimeout(() => playTone(context, 55, 0.04, 0.1, "square"), 55);
+    playTone(context, 72, 0.06, 0.16, "sawtooth", 0.11);
+    window.setTimeout(() => playTone(context, 55, 0.04, 0.1, "square", 0.08), 55);
   }
   if (feedback.kind === "buy") {
-    playTone(context, 660, 0.02, 0.08, "triangle");
-    window.setTimeout(() => playTone(context, 880, 0.02, 0.08, "triangle"), 70);
+    playTone(context, 660, 0.02, 0.08, "triangle", 0.09);
+    window.setTimeout(() => playTone(context, 880, 0.02, 0.08, "triangle", 0.08), 70);
   }
-  if (feedback.kind === "blocked" || feedback.kind === "pause") playTone(context, 240, 0.02, 0.08, "sine");
+  if (feedback.kind === "blocked" || feedback.kind === "pause") playTone(context, 240, 0.02, 0.08, "sine", 0.06);
 }
 
-function playTone(
-  context: AudioContext,
-  frequency: number,
-  attack: number,
-  duration: number,
-  type: OscillatorType,
-  volume = 0.11,
-) {
+function playTone(context: AudioContext, frequency: number, attack: number, duration: number, type: OscillatorType, volume = 0.11) {
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   const now = context.currentTime;

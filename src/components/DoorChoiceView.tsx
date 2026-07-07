@@ -3,16 +3,18 @@ import { Hud } from "./Hud";
 
 interface DoorChoiceViewProps {
   state: GameState;
+  isMuted: boolean;
+  onPause: () => void;
+  onToggleMute: () => void;
   onChooseDoor: (door: DoorChoice) => void;
-  onRestart: () => void;
 }
 
-export function DoorChoiceView({ state, onChooseDoor, onRestart }: DoorChoiceViewProps) {
+export function DoorChoiceView({ state, isMuted, onPause, onToggleMute, onChooseDoor }: DoorChoiceViewProps) {
   const hasSingleDoor = state.doors.length === 1;
 
   return (
     <div className="game-screen">
-      <Hud state={state} onRestart={onRestart} />
+      <Hud state={state} isMuted={isMuted} onPause={onPause} onToggleMute={onToggleMute} />
       <section className="door-room" aria-label="Choose a dungeon door">
         <div className="door-copy">
           <span>Room {state.roomsCleared} cleared</span>
@@ -20,12 +22,7 @@ export function DoorChoiceView({ state, onChooseDoor, onRestart }: DoorChoiceVie
         </div>
         <div className={hasSingleDoor ? "doors doors--single" : "doors"}>
           {state.doors.map((door, index) => (
-            <button
-              key={`${door.id}-${index}`}
-              type="button"
-              className={`door door--${door.tone}`}
-              onClick={() => onChooseDoor(door)}
-            >
+            <button key={`${door.id}-${index}`} type="button" className={`door door--${door.tone}`} onClick={() => onChooseDoor(door)}>
               <span className={`door-icon door-icon--${door.icon}`} aria-hidden="true" />
               <strong>{hasSingleDoor ? "Enter" : index === 0 ? "Left Door" : "Right Door"}</strong>
               <small>{door.label}</small>
