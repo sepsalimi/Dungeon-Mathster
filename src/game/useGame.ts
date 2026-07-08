@@ -52,17 +52,22 @@ export function useGame() {
   const mutedRef = useRef(false);
   const musicTheme = useRef<MusicTheme>("fight");
 
-  const makeRunPuzzle = useCallback((size: number, player: PlayerState) => {
-    return makePuzzle(size, { allowNegative: player.negativesUnlocked });
+const makeRunPuzzle = useCallback((size: number, player: PlayerState) => {
+    return makePuzzle(size, {
+      allowNegative: player.negativesUnlocked,
+      pathLength: size === 4 ? pickBossPathLength() : undefined,
+    });
   }, []);
 
-  const ensureAudio = useCallback(() => {
+const ensureAudio = useCallback((theme?: MusicTheme) => {
+    if (theme) musicTheme.current = theme;
     primeAudio(audioContext);
+    if (theme && music.current?.theme !== theme) stopMusic(music);
     startMusic(audioContext, music, mutedRef, musicTheme.current);
   }, []);
 
   const startRun = useCallback(() => {
-    ensureAudio();
+    ensureAudio("fight");
     window.history.replaceState({ dungeonMathster: true }, "");
     window.history.pushState({ dungeonMathsterPause: true }, "");
     setState({
@@ -84,7 +89,7 @@ export function useGame() {
   }, []);
 
   const resumeGame = useCallback(() => {
-    ensureAudio();
+    ensureAudio(musicTheme.current);
     window.history.pushState({ dungeonMathsterPause: true }, "");
     setState((current) => ({ ...current, paused: false, feedback: null }));
   }, [ensureAudio]);
@@ -104,7 +109,7 @@ export function useGame() {
   }, []);
 
   const startBossFight = useCallback(() => {
-    ensureAudio();
+    ensureAudio("boss");
     setState((current) => ({
       ...current,
       phase: "combat",
@@ -114,7 +119,7 @@ export function useGame() {
   }, [ensureAudio]);
 
   const submitPath = useCallback((path: string[]) => {
-    ensureAudio();
+    ensureAudio(musicTheme.current);
     setState((current) => {
       if (current.paused || current.phase !== "combat" || !current.enemy || !current.puzzle) return current;
 
@@ -183,7 +188,7 @@ export function useGame() {
   }, [ensureAudio, makeRunPuzzle]);
 
   const chooseDoor = useCallback((door: DoorChoice) => {
-    ensureAudio();
+    ensureAudio(getDoorMusicTheme(door.kind));
     if (door.kind === "shop") {
       setState((current) => ({
         ...current,
@@ -227,7 +232,7 @@ export function useGame() {
   }, [ensureAudio, makeRunPuzzle]);
 
   const takeBargain = useCallback((id: BargainId) => {
-    ensureAudio();
+    ensureAudio("bargain");
     setState((current) => {
       const player = { ...current.player };
       let message = bargainOptions.find((option) => option.id === id)?.name ?? "Bargain taken";
@@ -265,7 +270,7 @@ export function useGame() {
   }, [ensureAudio, makeRunPuzzle]);
 
   const buyUpgrade = useCallback((id: ShopUpgradeId) => {
-    ensureAudio();
+    ensureAudio("shop");
     const upgrade = shopUpgrades.find((candidate) => candidate.id === id);
     if (!upgrade) return;
 
@@ -289,7 +294,7 @@ export function useGame() {
   }, [ensureAudio]);
 
   const leaveShop = useCallback(() => {
-    ensureAudio();
+    ensureAudio("fight");
     setState((current) => startNextFight(current, makeRunPuzzle));
   }, [ensureAudio, makeRunPuzzle]);
 
@@ -407,7 +412,7 @@ function startMusic(
 
   const pattern = musicPatterns[theme];
   let index = 0;
-  const interval = window.setInterval(() => {
+const playStep = () => {
     playTone(context, pattern.bass[index % pattern.bass.length], 0.025, pattern.beat * 0.00048, pattern.bassType, pattern.volume);
     if (index % pattern.melodyEvery === 0) {
       window.setTimeout(
@@ -416,7 +421,9 @@ function startMusic(
       );
     }
     index += 1;
-  }, pattern.beat);
+  };
+  playStep();
+  const interval = window.setInterval(playStep, pattern.beat);
 
   music.current = { interval, theme };
 }
@@ -483,7 +490,7 @@ const musicPatterns: Record<MusicTheme, {
     bass: [82.41, 98, 110, 73.42, 82.41, 65.41],
     melody: [196, 174.61, 146.83, 164.81, 130.81, 146.83],
     beat: 560,
-    volume: 0.02,
+    volume: 0.045,
     melodyEvery: 2,
     bassType: "triangle",
   },
@@ -491,7 +498,7 @@ const musicPatterns: Record<MusicTheme, {
     bass: [65.41, 65.41, 73.42, 61.74, 55, 61.74],
     melody: [130.81, 146.83, 123.47, 98],
     beat: 430,
-    volume: 0.026,
+    volume: 0.052,
     melodyEvery: 2,
     bassType: "sawtooth",
   },
@@ -499,7 +506,7 @@ const musicPatterns: Record<MusicTheme, {
     bass: [98, 123.47, 146.83, 123.47],
     melody: [246.94, 293.66, 261.63, 220],
     beat: 760,
-    volume: 0.018,
+    volume: 0.038,
     melodyEvery: 1,
     bassType: "triangle",
   },
@@ -507,7 +514,7 @@ const musicPatterns: Record<MusicTheme, {
     bass: [110, 146.83, 164.81, 146.83],
     melody: [329.63, 293.66, 246.94, 293.66],
     beat: 700,
-    volume: 0.017,
+    volume: 0.036,
     melodyEvery: 1,
     bassType: "sine",
   },
@@ -515,8 +522,21 @@ const musicPatterns: Record<MusicTheme, {
     bass: [73.42, 69.3, 61.74, 69.3],
     melody: [155.56, 146.83, 123.47, 116.54],
     beat: 640,
-    volume: 0.021,
+    volume: 0.043,
     melodyEvery: 2,
     bassType: "triangle",
   },
 };
+function pickBossPathLength(): number {
+  const roll = Math.random();
+  if (roll < 0.45) return 3;
+  if (roll < 0.85) return 5;
+  return 7;
+}
+
+function getDoorMusicTheme(kind: DoorChoice["kind"]): MusicTheme {
+  if (kind === "shop") return "shop";
+  if (kind === "bargain") return "bargain";
+  if (kind === "boss") return "boss";
+  return "door";
+}

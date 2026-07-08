@@ -23,6 +23,16 @@ describe("math puzzle generation", () => {
     }
   });
 
+
+  it("supports tuned boss puzzle path lengths", () => {
+    for (const pathLength of [3, 5, 7]) {
+      const puzzle = makePuzzle(4, { pathLength });
+
+      expect(puzzle.answerPath).toHaveLength(pathLength);
+      expect(isValidPathShape(puzzle.answerPath, puzzle.tiles)).toBe(true);
+      expect(isCorrectPath(puzzle.answerPath, puzzle.tiles, puzzle.target)).toBe(true);
+    }
+  });
   it("rejects diagonal moves and reused tiles", () => {
     const puzzle = makePuzzle(3);
     const diagonalPath = ["0-0", "1-1", "2-2"];

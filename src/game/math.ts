@@ -5,11 +5,12 @@ const mixedNumbers = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 interface PuzzleOptions {
   allowNegative?: boolean;
+  pathLength?: number;
 }
 
 export function makePuzzle(size: number, options: PuzzleOptions = {}): Puzzle {
   const numberRange = options.allowNegative ? mixedNumbers : positiveNumbers;
-  const pathLength = size === 3 ? 3 : 7;
+  const pathLength = options.pathLength ?? (size === 3 ? 3 : 7);
   const answerPath = buildAnswerPath(size, pathLength);
   const pathNumbers = new Map<string, number>();
 

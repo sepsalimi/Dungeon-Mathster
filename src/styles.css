@@ -1518,3 +1518,107 @@ p {
   border-radius: 0;
   transform: rotate(45deg);
 }
+
+.enemy-attack-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 34;
+  pointer-events: none;
+  display: grid;
+  justify-items: center;
+  align-items: end;
+  padding-bottom: max(7rem, 28dvh);
+  perspective: 520px;
+  animation: attack-overlay-fade 560ms ease-out both;
+}
+
+.enemy-attack-sprite {
+  position: relative;
+  width: min(48vw, 13rem);
+  height: min(48vw, 13rem);
+  background:
+    linear-gradient(90deg, transparent 0 14%, #628a5a 14% 86%, transparent 86%),
+    linear-gradient(#86b576, #3d664d);
+  border: 6px solid #121b14;
+  box-shadow:
+    inset -12px -12px 0 rgba(0, 0, 0, 0.2),
+    0 18px 0 rgba(0, 0, 0, 0.22),
+    0 0 46px rgba(255, 43, 43, 0.34);
+  image-rendering: pixelated;
+  animation: enemy-overlay-lunge 560ms cubic-bezier(0.15, 0.92, 0.18, 1) both;
+}
+
+.enemy-attack-overlay--boss .enemy-attack-sprite {
+  width: min(58vw, 16rem);
+  height: min(58vw, 16rem);
+  background:
+    linear-gradient(90deg, transparent 0 12%, #8e4e72 12% 88%, transparent 88%),
+    linear-gradient(#c36b93, #563858);
+  border-color: #211223;
+}
+
+.enemy-attack-horn,
+.enemy-attack-eye,
+.enemy-attack-mouth {
+  position: absolute;
+  display: block;
+}
+
+.enemy-attack-horn {
+  top: -1.35rem;
+  width: 1.45rem;
+  height: 1.85rem;
+  background: #d8ceb6;
+  border: 3px solid #211923;
+}
+
+.enemy-attack-horn--left {
+  left: 1rem;
+  transform: skewX(-12deg);
+}
+
+.enemy-attack-horn--right {
+  right: 1rem;
+  transform: skewX(12deg);
+}
+
+.enemy-attack-eye {
+  top: 34%;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: #ff3e3e;
+  border: 3px solid #141017;
+  box-shadow: 0 0 16px rgba(255, 43, 43, 0.82);
+}
+
+.enemy-attack-eye--left {
+  left: 21%;
+}
+
+.enemy-attack-eye--right {
+  right: 21%;
+}
+
+.enemy-attack-mouth {
+  left: 50%;
+  bottom: 18%;
+  width: 34%;
+  height: 18%;
+  background: #30060a;
+  border: 3px solid #141017;
+  transform: translateX(-50%);
+}
+
+@keyframes enemy-overlay-lunge {
+  0% { opacity: 0; transform: translateY(-34dvh) translateZ(-120px) scale(0.38); }
+  24% { opacity: 1; transform: translateY(-14dvh) translateZ(20px) scale(0.86); }
+  48% { opacity: 1; transform: translateY(8dvh) translateZ(180px) scale(1.42); }
+  72% { opacity: 0.9; transform: translateY(2dvh) translateZ(80px) scale(1.08); }
+  100% { opacity: 0; transform: translateY(0) translateZ(40px) scale(1); }
+}
+
+@keyframes attack-overlay-fade {
+  0% { opacity: 0; }
+  14%, 72% { opacity: 1; }
+  100% { opacity: 0; }
+}
