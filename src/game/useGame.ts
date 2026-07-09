@@ -372,14 +372,33 @@ export function useGame() {
     if (!upgrade) return;
 
     setState((current) => {
-      if (current.player.gold < getUpgradeCost(current.player, upgrade)) {
+      if (current.tutorial === "shop" && id !== "heal") {
+        return { ...current, feedback: { kind: "blocked", message: "Buy Heal HP first.", nonce: Date.now() } };
+      }
+
+      const cost = getUpgradeCost(current.player, upgrade);
+      if (current.player.gold < cost) {
         return { ...current, feedback: { kind: "blocked", message: "Not enough gold.", nonce: Date.now() } };
       }
 
       const rewardItem = getShopRewardItem(id);
+      const player = applyShopUpgrade(current.player, id);
+      if (current.tutorial === "shop" && id === "heal") {
+        return {
+          ...current,
+          tutorial: "healthBought",
+          player,
+          feedback: {
+            kind: "buy",
+            message: `Heal HP purchased: -${cost}g. HP ${current.player.hp}/${current.player.maxHp} -> ${player.hp}/${player.maxHp}.`,
+            nonce: Date.now(),
+          },
+        };
+      }
+
       return {
         ...current,
-        player: applyShopUpgrade(current.player, id),
+        player,
         feedback: {
           kind: "buy",
           message: `${upgrade.name} purchased.`,
@@ -393,7 +412,11 @@ export function useGame() {
   const leaveShop = useCallback(() => {
     ensureAudio("fight");
     setState((current) => {
-      const tutorialEnding = current.tutorial === "shop";
+      if (current.tutorial === "shop") {
+        return { ...current, feedback: { kind: "blocked", message: "Buy Heal HP first.", nonce: Date.now() } };
+      }
+
+      const tutorialEnding = current.tutorial === "healthBought";
       if (tutorialEnding) return makeNewRunState(false);
 
       return startNextFight({ ...current, feedback: null }, makeRunPuzzle);

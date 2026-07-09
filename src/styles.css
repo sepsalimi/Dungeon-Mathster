@@ -987,6 +987,7 @@ p {
 }
 
 .player-vitals {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.36rem 0.65rem;
@@ -998,6 +999,28 @@ p {
     #2b1820;
   border: 2px solid #7c3d43;
   box-shadow: 0 4px 0 #070508;
+}
+
+.player-vitals--tutorial {
+  border-color: #ff3333;
+  outline: 3px solid rgba(255, 51, 51, 0.92);
+  outline-offset: 0.18rem;
+  box-shadow: 0 4px 0 #070508, 0 0 0 5px rgba(255, 51, 51, 0.16), 0 0 24px rgba(255, 51, 51, 0.42);
+  animation: tutorial-focus-pulse 1.2s ease-in-out infinite;
+}
+
+.player-vitals--tutorial::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -1.35rem;
+  width: 0;
+  height: 0;
+  border-left: 0.75rem solid transparent;
+  border-right: 0.75rem solid transparent;
+  border-top: 1rem solid #ff3333;
+  filter: drop-shadow(0 0 6px rgba(255, 51, 51, 0.9));
+  transform: translateX(-50%);
 }
 
 .player-vitals span {
@@ -1028,6 +1051,7 @@ p {
 }
 
 .upgrade-row {
+  position: relative;
   width: 100%;
   min-height: 4.35rem;
   display: grid;
@@ -1041,6 +1065,27 @@ p {
   border: 1px solid rgba(245, 239, 224, 0.12);
   box-shadow: 0 4px 0 #08070b;
   cursor: pointer;
+}
+
+.upgrade-row--tutorial {
+  border-color: #ff3333;
+  outline: 3px solid rgba(255, 51, 51, 0.92);
+  outline-offset: 0.18rem;
+  box-shadow: 0 4px 0 #08070b, 0 0 0 5px rgba(255, 51, 51, 0.16), 0 0 24px rgba(255, 51, 51, 0.42);
+  animation: tutorial-focus-pulse 1.2s ease-in-out infinite;
+}
+
+.upgrade-row--tutorial::after {
+  content: "";
+  position: absolute;
+  right: 1.3rem;
+  top: -1.35rem;
+  width: 0;
+  height: 0;
+  border-left: 0.75rem solid transparent;
+  border-right: 0.75rem solid transparent;
+  border-top: 1rem solid #ff3333;
+  filter: drop-shadow(0 0 6px rgba(255, 51, 51, 0.9));
 }
 
 .upgrade-row:disabled {
@@ -1078,6 +1123,7 @@ p {
 }
 
 .primary-action {
+  position: relative;
   width: 100%;
   min-height: 3.2rem;
   display: inline-flex;
@@ -1090,6 +1136,33 @@ p {
   box-shadow: 0 6px 0 #09070a;
   font-weight: 900;
   cursor: pointer;
+}
+
+.primary-action:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.55);
+  opacity: 0.55;
+}
+
+.primary-action--tutorial {
+  outline: 3px solid rgba(255, 51, 51, 0.92);
+  outline-offset: 0.18rem;
+  box-shadow: 0 6px 0 #09070a, 0 0 0 5px rgba(255, 51, 51, 0.16), 0 0 24px rgba(255, 51, 51, 0.42);
+  animation: tutorial-focus-pulse 1.2s ease-in-out infinite;
+}
+
+.primary-action--tutorial::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -1.35rem;
+  width: 0;
+  height: 0;
+  border-left: 0.75rem solid transparent;
+  border-right: 0.75rem solid transparent;
+  border-top: 1rem solid #ff3333;
+  filter: drop-shadow(0 0 6px rgba(255, 51, 51, 0.9));
+  transform: translateX(-50%);
 }
 
 .boss-intro {
@@ -2462,40 +2535,45 @@ p {
 .tutorial-banner {
   position: fixed;
   left: 50%;
+  top: 50%;
   z-index: 40;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: min(96vw, 520px);
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.65rem;
   align-items: start;
-  padding: 0.9rem 1rem;
+  padding: 1.05rem 1.1rem;
   color: #fff8e7;
-  background: rgba(20, 16, 25, 0.94);
-  border: 3px solid rgba(255, 51, 51, 0.78);
-  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.38), 0 0 28px rgba(255, 51, 51, 0.24);
+  pointer-events: none;
+  background: rgba(20, 16, 25, 0.98);
+  border: 5px solid rgba(255, 51, 51, 0.9);
+  box-shadow: 0 9px 0 rgba(0, 0, 0, 0.5), 0 0 36px rgba(255, 51, 51, 0.34);
 }
 
 .tutorial-banner--top {
-  top: calc(env(safe-area-inset-top) + 5.6rem);
+  top: 48%;
 }
 
 .tutorial-banner--bottom {
-  bottom: calc(env(safe-area-inset-bottom) + 0.9rem);
+  top: 52%;
+  bottom: auto;
 }
 
-/* In the shop the banner takes the merchant header's spot so it never hides
-   the upgrade list or the Venture Onward button. */
 .tutorial-banner--shop {
-  top: calc(env(safe-area-inset-top) + 5rem);
+  top: 46%;
+}
+
+.tutorial-banner--healthBought {
+  top: 46%;
 }
 
 .shop-room--tutorial {
-  padding-top: 10rem;
+  padding-top: 1.2rem;
 }
 
 .shop-room--tutorial .merchant {
-  display: none;
+  display: grid;
 }
 
 .tutorial-banner__text {
@@ -2519,6 +2597,7 @@ p {
 }
 
 .tutorial-skip {
+  pointer-events: auto;
   justify-self: end;
   padding: 0.48rem 0.65rem;
   color: #d8ceb6;

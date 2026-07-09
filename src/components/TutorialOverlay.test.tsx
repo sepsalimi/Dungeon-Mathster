@@ -12,4 +12,11 @@ describe("TutorialOverlay", () => {
     expect(html).toContain("tutorial-banner--gold");
     expect(html).toContain("Gold drops after a kill");
   });
+
+  it("renders the health purchase confirmation step", () => {
+    const html = renderToStaticMarkup(<TutorialOverlay step="healthBought" onSkip={() => undefined} />);
+
+    expect(html).toContain("tutorial-banner--healthBought");
+    expect(html).toContain("Health increased and gold was spent");
+  });
 });

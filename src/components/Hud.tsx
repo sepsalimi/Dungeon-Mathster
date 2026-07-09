@@ -16,13 +16,14 @@ const soundLabels: Record<SoundLevel, string> = {
 
 export function Hud({ state, soundLevel, onPause, onCycleSoundLevel }: HudProps) {
   const items = getItemStacks(state.player);
+  const highlightGold = state.tutorial === "gold" || state.tutorial === "shop" || state.tutorial === "healthBought";
 
   return (
-    <header className={["hud", state.tutorial === "gold" ? "hud--gold-tutorial" : ""].filter(Boolean).join(" ")}>
+    <header className={["hud", highlightGold ? "hud--gold-tutorial" : ""].filter(Boolean).join(" ")}>
       <div className="run-panel" aria-label={`Floor ${state.floor}, ${state.player.gold} gold`}>
         <div className="run-panel__topline">
           <span>Floor {state.floor}</span>
-          <strong className={["gold-chip", state.tutorial === "gold" ? "gold-chip--tutorial" : ""].filter(Boolean).join(" ")}>
+          <strong className={["gold-chip", highlightGold ? "gold-chip--tutorial" : ""].filter(Boolean).join(" ")}>
             <span className="coin-icon" aria-hidden="true">G</span>
             {state.player.gold}
           </strong>

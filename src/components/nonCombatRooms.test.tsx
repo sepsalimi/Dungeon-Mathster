@@ -58,6 +58,50 @@ describe("non-combat rooms", () => {
     expect(html).not.toContain("Freeze");
   });
 
+  it("guides the tutorial player to buy health before continuing", () => {
+    const html = renderToStaticMarkup(
+      <ShopView
+        state={{ ...state, tutorial: "shop", player: { ...state.player, hp: 98, gold: 18 } }}
+        soundLevel="mute"
+        onPause={() => undefined}
+        onCycleSoundLevel={() => undefined}
+        onBuyUpgrade={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("98/100");
+    expect(html).toContain("gold-chip--tutorial");
+    expect(html).toContain("upgrade-row--tutorial");
+    expect(html).toContain("Heal HP");
+    expect(html).toContain("15g");
+    expect(html).toContain("disabled=\"\"");
+  });
+
+  it("shows the tutorial health and gold change after buying health", () => {
+    const html = renderToStaticMarkup(
+      <ShopView
+        state={{
+          ...state,
+          tutorial: "healthBought",
+          player: { ...state.player, hp: 100, gold: 3 },
+          feedback: { kind: "buy", message: "Heal HP purchased: -15g. HP 98/100 -> 100/100.", nonce: 1 },
+        }}
+        soundLevel="mute"
+        onPause={() => undefined}
+        onCycleSoundLevel={() => undefined}
+        onBuyUpgrade={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("100/100");
+    expect(html).toContain("Heal HP purchased: -15g. HP 98/100 -&gt; 100/100.");
+    expect(html).toContain("gold-chip--tutorial");
+    expect(html).toContain(">3</strong>");
+    expect(html).toContain("primary-action--tutorial");
+  });
+
   it("shows health and Giant Equation in the bargain room", () => {
     const html = renderToStaticMarkup(
       <BargainView
