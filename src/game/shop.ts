@@ -50,12 +50,6 @@ export const bargainOptions: BargainOption[] = [
     downside: "Negative numbers enter the grid.",
   },
   {
-    id: "negativeHeart",
-    name: "Negative Heart",
-    upside: "Monster answers need 1 extra number when the grid can fit it.",
-    downside: "Negative numbers enter the grid.",
-  },
-  {
     id: "glassBlade",
     name: "Glass Blade",
     upside: "Double your sword damage.",
@@ -88,11 +82,6 @@ export function applyBargain(
     next.oracleLensChance = Math.min(0.75, next.oracleLensChance + 0.25);
     next.negativesUnlocked = true;
     message = "Oracle Lens taken. 25% answer starts will glow. Negative numbers enter the grid.";
-  }
-  if (id === "negativeHeart") {
-    next.permutationBonus += 1;
-    next.negativesUnlocked = true;
-    message = "Negative Heart taken. Monster answers grow longer. Negative numbers enter the grid.";
   }
   if (id === "glassBlade") {
     next.swordDamage = Math.max(1, next.swordDamage * 2);
