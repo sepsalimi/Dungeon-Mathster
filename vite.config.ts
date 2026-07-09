@@ -2,8 +2,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+const configuredBasePath = process.env.VITE_BASE_PATH ?? "/";
+const basePath = configuredBasePath.endsWith("/") ? configuredBasePath : `${configuredBasePath}/`;
+const assetPath = (path: string) => `${basePath}${path}`.replace(/\/{2,}/g, "/");
+
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH ?? "/",
+  base: basePath,
   plugins: [
     react(),
     VitePWA({
@@ -20,21 +24,22 @@ export default defineConfig({
         display: "fullscreen",
         display_override: ["fullscreen", "standalone"],
         orientation: "portrait",
-        start_url: "/",
-        scope: "/",
+        id: basePath,
+        start_url: basePath,
+        scope: basePath,
         icons: [
           {
-            src: "/pwa-192x192.png",
+            src: assetPath("pwa-192x192.png"),
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/pwa-512x512.png",
+            src: assetPath("pwa-512x512.png"),
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "/pwa-maskable-512x512.png",
+            src: assetPath("pwa-maskable-512x512.png"),
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
