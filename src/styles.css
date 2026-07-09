@@ -13,6 +13,15 @@
   --text-warm: #ffd9ad;
   --text-cyan: #bff9ff;
   --text-danger: #ff9d9d;
+  --game-available-width: 100vw;
+  --game-max-width: 520px;
+  --game-width-from-height: 50vh;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --game-width-from-height: 50dvh;
+  }
 }
 
 * {
@@ -28,6 +37,8 @@ body,
 
 body {
   min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(191, 87, 71, 0.2), transparent 32rem),
@@ -42,16 +53,17 @@ button {
   min-height: 100vh;
   min-height: 100dvh;
   display: grid;
-  place-items: stretch center;
+  place-items: center;
   padding: 0;
 }
 
 .game-screen,
 .start-screen,
 .end-screen {
-  width: min(100vw, 520px);
-  min-height: 100vh;
-  min-height: 100dvh;
+  width: min(var(--game-available-width), var(--game-max-width), var(--game-width-from-height));
+  aspect-ratio: 1 / 2;
+  height: auto;
+  min-height: 0;
   position: relative;
   overflow: hidden;
   background: #17131d;
@@ -59,7 +71,7 @@ button {
 
 .game-screen {
   display: grid;
-  grid-template-rows: auto minmax(280px, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .game-screen--danger {
@@ -176,7 +188,7 @@ button {
 
 .room-scene {
   position: relative;
-  min-height: 300px;
+  min-height: 0;
   overflow: hidden;
   background: #15121d;
   perspective: 540px;
@@ -705,7 +717,9 @@ button {
 .door-room,
 .shop-room,
 .boss-intro {
-  min-height: calc(100dvh - 4rem);
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 2px, transparent 2px) 0 0 / 34px 34px,
     linear-gradient(180deg, #272230, #15121d 68%);
@@ -1144,6 +1158,8 @@ p {
 
 @media (min-width: 760px) {
   .app-shell {
+    --game-available-width: calc(100vw - 2rem);
+    --game-width-from-height: calc(50vh - 1rem);
     padding: 1rem;
     background: #0e0c12;
   }
@@ -1151,9 +1167,16 @@ p {
   .game-screen,
   .start-screen,
   .end-screen {
-    min-height: min(880px, calc(100vh - 2rem));
     border: 1px solid rgba(245, 239, 224, 0.12);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@supports (height: 100dvh) {
+  @media (min-width: 760px) {
+    .app-shell {
+      --game-width-from-height: calc(50dvh - 1rem);
+    }
   }
 }
 
@@ -1338,11 +1361,13 @@ p {
 }
 
 .bargain-room {
-  min-height: calc(100dvh - 4rem);
+  min-height: 0;
+  height: 100%;
   display: grid;
   align-content: start;
   gap: 0.9rem;
   padding: 1rem;
+  overflow-y: auto;
   background:
     radial-gradient(circle at 50% 8rem, rgba(179, 60, 126, 0.26), transparent 12rem),
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 2px, transparent 2px) 0 0 / 34px 34px,
