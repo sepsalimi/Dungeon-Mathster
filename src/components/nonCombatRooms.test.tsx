@@ -31,6 +31,7 @@ const state: GameState = {
   feedback: null,
   frozenUntil: 0,
   paused: false,
+  tutorial: null,
 };
 
 describe("non-combat rooms", () => {

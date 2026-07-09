@@ -18,7 +18,10 @@ export function ShopView({ state, soundLevel, onPause, onCycleSoundLevel, onBuyU
     <div className="game-screen">
       <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <RewardCue feedback={state.feedback} />
-      <section className="shop-room" aria-label="Dungeon shop">
+      <section
+        className={state.tutorial === "shop" ? "shop-room shop-room--tutorial" : "shop-room"}
+        aria-label="Dungeon shop"
+      >
         <div className="merchant">
           <div className="merchant-sprite"><span /></div>
           <div><span className="eyebrow">Torch Shop</span><h1>Spend Gold</h1></div>

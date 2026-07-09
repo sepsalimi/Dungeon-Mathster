@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type Touch, type TouchEvent } from "react";
 import type { GridTile, PlayerState, Puzzle } from "../game/types";
+import { SwipeGuide } from "./SwipeGuide";
 
 interface MathGridProps {
   player: PlayerState;
   puzzle: Puzzle;
   startHintId?: string | null;
+  guidePath?: string[] | null;
   onSubmitPath: (path: string[]) => void;
 }
 
@@ -15,7 +17,7 @@ interface DragPoint {
 
 const dragSampleSpacing = 12;
 
-export function MathGrid({ player, puzzle, startHintId, onSubmitPath }: MathGridProps) {
+export function MathGrid({ player, puzzle, startHintId, guidePath, onSubmitPath }: MathGridProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const selectedRef = useRef<string[]>([]);
   const activeInput = useRef<"pointer" | "touch" | null>(null);
@@ -201,6 +203,7 @@ export function MathGrid({ player, puzzle, startHintId, onSubmitPath }: MathGrid
             </button>
           );
         })}
+        {guidePath && selected.length === 0 && <SwipeGuide tiles={puzzle.tiles} path={guidePath} size={puzzle.size} />}
       </div>
     </section>
   );

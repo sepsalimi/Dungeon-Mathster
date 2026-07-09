@@ -15,6 +15,7 @@ export type ItemId =
   | "maxHp"
   | "goldBonus"
   | "longEquation";
+export type TutorialStep = "swipe" | "finish" | "door" | "shop";
 export type GamePhase =
   | "start"
   | "combat"
@@ -96,6 +97,7 @@ export interface GameState {
   feedback: FeedbackState | null;
   frozenUntil: number;
   paused: boolean;
+  tutorial: TutorialStep | null;
 }
 
 export type ShopUpgradeId = "heal" | "maxHp" | "damageReductionArmor" | "temporaryArmor" | "barbedArmor" | "sword";
