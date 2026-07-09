@@ -1934,6 +1934,20 @@ p {
   bottom: calc(env(safe-area-inset-bottom) + 0.9rem);
 }
 
+/* In the shop the banner takes the merchant header's spot so it never hides
+   the upgrade list or the Venture Onward button. */
+.tutorial-banner--shop {
+  top: calc(env(safe-area-inset-top) + 5rem);
+}
+
+.shop-room--tutorial {
+  padding-top: 10rem;
+}
+
+.shop-room--tutorial .merchant {
+  display: none;
+}
+
 .tutorial-banner__text {
   display: grid;
   gap: 0.2rem;
@@ -2039,8 +2053,4 @@ p {
 
 .door-room--tutorial {
   padding-bottom: 6.5rem;
-}
-
-.shop-room--tutorial {
-  padding-bottom: 8.5rem;
 }

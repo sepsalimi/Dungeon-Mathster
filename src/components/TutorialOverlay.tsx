@@ -10,7 +10,7 @@ interface TutorialOverlayProps {
 
 export function TutorialOverlay({ step, onSkip }: TutorialOverlayProps) {
   const copy = tutorialCopy[step];
-  const position = step === "door" || step === "shop" ? "bottom" : "top";
+  const position = step === "door" ? "bottom" : step === "shop" ? "shop" : "top";
 
   return (
     <aside className={`tutorial-banner tutorial-banner--${position}`} aria-label="Tutorial">

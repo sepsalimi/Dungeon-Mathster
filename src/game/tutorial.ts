@@ -19,8 +19,7 @@ export const tutorialCopy: Record<TutorialStep, { title: string; message: string
   },
   shop: {
     title: "Step 4 of 4",
-    message:
-      "Buy an upgrade, then Venture Onward. Deeper down you may find Bargain and Mystery doors. What waits behind them is yours to discover.",
+    message: "Buy an upgrade, then Venture Onward. Deeper down, Bargain and Mystery doors await. What they hold is yours to discover.",
   },
 };
 
