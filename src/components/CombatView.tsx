@@ -19,6 +19,7 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
   const hurtNonce = state.feedback?.kind === "enemy" ? state.feedback.nonce : null;
   const highlightEnemyHealth = state.tutorial === "finish" || state.tutorial === "killEnemy";
   const highlightPlayerHealth = state.tutorial === "enemyHit";
+  const highlightTarget = state.tutorial === "swipe" || state.tutorial === "killEnemy";
   const guidePath = state.tutorial === "swipe" || state.tutorial === "killEnemy" ? state.puzzle?.answerPath : null;
   const startHintId = useMemo(() => {
     if (!state.puzzle || state.player.oracleLensChance <= 0) return null;
@@ -42,6 +43,7 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
           puzzle={state.puzzle}
           startHintId={startHintId}
           guidePath={guidePath}
+          highlightTarget={highlightTarget}
           highlightPlayerHealth={highlightPlayerHealth}
           onSubmitPath={onSubmitPath}
         />

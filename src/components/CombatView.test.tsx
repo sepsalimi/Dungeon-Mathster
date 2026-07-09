@@ -71,6 +71,7 @@ describe("CombatView tutorial cues", () => {
     );
 
     expect(html).toContain("swipe-guide");
+    expect(html).toContain("target-card--tutorial");
     expect(html).toContain("enemy-plate--tutorial");
   });
 });
