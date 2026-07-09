@@ -1,8 +1,11 @@
-import type { BargainOption, DoorChoice, EnemyState, ShopUpgrade } from "./types";
+// Enemy stat curves, room rewards, and door choice generation.
+import type { DoorChoice, EnemyState } from "./types";
 import { getBossDefinition } from "./progression";
 
 export const MONSTER_REWARD = 18;
 export const MONSTER_ROOMS_BEFORE_BOSS = 3;
+export const MYSTERY_HEAL = 25;
+export const MYSTERY_GOLD = 10;
 
 const monsterNames = [
   "Moss Gnawer",
@@ -15,50 +18,16 @@ const monsterNames = [
   "Royal Remainder",
 ];
 
-export const shopUpgrades: ShopUpgrade[] = [
-  { id: "heal", name: "Heal HP", description: "Restore 35 HP now.", cost: 15 },
-  { id: "maxHp", name: "Increase Max HP", description: "Gain 20 max HP and heal 20.", cost: 30 },
-  { id: "damageReductionArmor", name: "Damage Reduction Armor", description: "Reduce monster attacks by 1.", cost: 30 },
-  { id: "temporaryArmor", name: "Armor", description: "Gain 25 temporary HP.", cost: 20 },
-  { id: "barbedArmor", name: "Barbed Armor", description: "Deal 1 damage when enemies hit you.", cost: 30 },
-  { id: "sword", name: "Sword Upgrade", description: "Deal 1 extra damage per correct answer.", cost: 35 },
-];
-
-export const bargainOptions: BargainOption[] = [
-  {
-    id: "oracleLens",
-    name: "Oracle Lens",
-    upside: "Sometimes the first number in an answer glows.",
-    downside: "Lose 20 max HP permanently.",
-  },
-  {
-    id: "negativeHeart",
-    name: "Negative Heart",
-    upside: "Gain 30 max HP and heal 30.",
-    downside: "Negative numbers enter the grid.",
-  },
-  {
-    id: "glassBlade",
-    name: "Glass Blade",
-    upside: "Double your sword damage.",
-    downside: "Your max HP is halved.",
-  },
-  {
-    id: "coinHex",
-    name: "Coin Hex",
-    upside: "Heads: gain 1 sword damage.",
-    downside: "Tails: monsters deal 2 extra damage.",
-  },
-];
-
 export function makeEnemy(isBoss: boolean, floor: number): EnemyState {
   if (isBoss) {
     const boss = getBossDefinition(floor);
     return { name: boss.name, hp: boss.hp, maxHp: boss.hp, damage: boss.damage, isBoss: true };
   }
 
-  const hp = 2 + floor * 3 + Math.floor(floor ** 1.45);
-  const damage = 4 + floor * 2;
+  // Tuned so a fresh sword (2 damage) kills a floor 1 monster in 3 solves.
+  // Damage stays gentle early; the shrinking attack timer does the late scaling.
+  const hp = 4 + floor * 2;
+  const damage = 2 + floor;
 
   return {
     name: monsterNames[Math.floor(Math.random() * monsterNames.length)],

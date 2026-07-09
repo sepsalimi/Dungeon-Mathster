@@ -2,6 +2,7 @@
 import type { ItemId, MathOperator, PlayerState } from "./types";
 
 export const STARTING_MAX_HP = 120;
+export const STARTING_SWORD_DAMAGE = 2;
 
 export interface BossDefinition {
   name: string;
@@ -17,39 +18,42 @@ export interface ItemDefinition {
   icon: string;
 }
 
+// Template HP targets roughly 5-6 correct answers at the sword damage a player
+// is expected to have on that floor. Damage stays a point or two above the
+// floor's normal monsters so bosses feel dangerous without one-shotting slow solvers.
 const bossTemplates: BossDefinition[] = [
   {
     name: "Count Calculus",
-    hp: 8,
-    damage: 5,
+    hp: 10,
+    damage: 4,
     intro: "Three rooms brought you here, little solver. My grid is larger, and my sums bite harder.",
     item: "lifesteal",
   },
   {
     name: "Minus Wraith",
-    hp: 12,
-    damage: 7,
+    hp: 13,
+    damage: 6,
     intro: "Every step down takes something away. Show me you can survive subtraction.",
     item: "damageReductionArmor",
   },
   {
     name: "Product Golem",
-    hp: 18,
-    damage: 9,
+    hp: 16,
+    damage: 7,
     intro: "Multiplication comes first in my halls. Build the product before chasing the sum.",
     item: "barbedArmor",
   },
   {
     name: "Order Hydra",
-    hp: 24,
-    damage: 11,
+    hp: 20,
+    damage: 8,
     intro: "Many heads, one order. Keep your operations clean or lose the thread.",
     item: "goldBonus",
   },
   {
     name: "The Bedmas King",
-    hp: 32,
-    damage: 13,
+    hp: 24,
+    damage: 9,
     intro: "Addition, subtraction, and products all answer to me.",
     item: "sword",
   },
@@ -78,7 +82,7 @@ export const itemDefinitions: Record<ItemId, ItemDefinition> = {
   },
   lifesteal: {
     name: "Lifesteal",
-    description: "Heal 1 HP on every hit.",
+    description: "Heal 2 HP on every hit.",
     icon: "fang",
   },
   damageReductionArmor: {
@@ -113,13 +117,15 @@ export const itemDefinitions: Record<ItemId, ItemDefinition> = {
   },
 };
 
+// Cycle bonuses keep boss stats monotonic across the template wrap
+// (floor 5 Bedmas King -> floor 6 Count Calculus).
 export function getBossDefinition(floor: number): BossDefinition {
   const template = bossTemplates[(floor - 1) % bossTemplates.length];
   const cycle = Math.floor((floor - 1) / bossTemplates.length);
   return {
     ...template,
-    hp: template.hp + cycle * 14 + Math.max(0, floor - 1) * 3,
-    damage: template.damage + Math.floor((floor - 1) * 1.5),
+    hp: template.hp + cycle * 14 + (floor - 1) * 2,
+    damage: template.damage + cycle * 5 + (floor - 1),
   };
 }
 
@@ -129,9 +135,11 @@ export function getFloorOperators(floor: number): MathOperator[] {
   return ["+"];
 }
 
+// Longer 5-tile paths wait until floor 4 so multiplication (floor 3) and path
+// length never spike difficulty on the same floor.
 export function getRoomPathLength(size: number, floor: number, isBoss: boolean): number | undefined {
   if (isBoss) return pickBossPathLength(floor);
-  if (size === 3 && floor >= 3) return 5;
+  if (size === 3 && floor >= 4) return 5;
   return undefined;
 }
 
@@ -144,7 +152,7 @@ export function applyBossItem(player: PlayerState, floor: number): { player: Pla
   let rewardedPlayer = addItem(player, item);
 
   if (item === "lifesteal") {
-    rewardedPlayer = { ...rewardedPlayer, lifesteal: rewardedPlayer.lifesteal + 1 };
+    rewardedPlayer = { ...rewardedPlayer, lifesteal: rewardedPlayer.lifesteal + 2 };
   }
   if (item === "damageReductionArmor") {
     rewardedPlayer = { ...rewardedPlayer, damageReductionArmor: rewardedPlayer.damageReductionArmor + 1 };
@@ -187,14 +195,19 @@ export function getItemStacks(player: PlayerState): Array<{ id: ItemId; count: n
     .filter((item) => item.count > 0);
 }
 
+// Early bosses stay on short paths so new players are not asked to plan
+// 7-tile swipes before they have learned the grid.
 function pickBossPathLength(floor: number): number {
   const roll = Math.random();
   if (floor < 3) {
-    if (roll < 0.55) return 3;
-    if (roll < 0.9) return 5;
+    return roll < 0.65 ? 3 : 5;
+  }
+  if (floor < 5) {
+    if (roll < 0.35) return 3;
+    if (roll < 0.8) return 5;
     return 7;
   }
   if (roll < 0.25) return 3;
-  if (roll < 0.72) return 5;
+  if (roll < 0.7) return 5;
   return 7;
 }
