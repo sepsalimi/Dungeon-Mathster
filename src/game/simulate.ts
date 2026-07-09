@@ -3,7 +3,7 @@
 // Player skill is modeled as puzzle solve time plus accuracy per attempt.
 import { applyLifesteal, getEnemyAttackInterval, resolveEnemyAttack } from "./combat";
 import { makeDoorChoices, makeEnemy, MONSTER_REWARD, MONSTER_ROOMS_BEFORE_BOSS, MYSTERY_GOLD, MYSTERY_HEAL } from "./content";
-import { applyBossItem, getBossReward, getItemCount, STARTING_MAX_HP, STARTING_SWORD_DAMAGE } from "./progression";
+import { FINAL_FLOOR, applyBossItem, getBossReward, getItemCount, STARTING_MAX_HP, STARTING_SWORD_DAMAGE } from "./progression";
 import { applyBargain, applyShopUpgrade, getUpgradeCost, shopUpgrades } from "./shop";
 import type { EnemyState, PlayerState, ShopUpgradeId } from "./types";
 
@@ -19,6 +19,7 @@ export interface SkillProfile {
 }
 
 export interface RunResult {
+  won: boolean;
   floorsCleared: number;
   floor1MonsterSolves: number[];
   floor1FightSeconds: number[];
@@ -26,13 +27,13 @@ export interface RunResult {
 
 export interface SimulationSummary {
   runs: number;
+  winRate: number;
   medianFloorsCleared: number;
   clearRateByFloor: number[];
   avgFloor1SolvesPerMonster: number;
   avgFloor1FightSeconds: number;
 }
 
-const MAX_FLOOR = 30;
 const MIN_ATTEMPT_SECONDS = 1.5;
 
 function makeSimPlayer(): PlayerState {
@@ -156,7 +157,7 @@ export function simulateRun(profile: SkillProfile): RunResult {
   const floor1MonsterSolves: number[] = [];
   const floor1FightSeconds: number[] = [];
 
-  while (floor <= MAX_FLOOR) {
+  while (true) {
     const isBossRoom = roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS;
     const enemy = makeEnemy(isBossRoom, floor);
     const result = simulateFight(player, enemy, floor, profile);
@@ -168,10 +169,13 @@ export function simulateRun(profile: SkillProfile): RunResult {
     }
 
     if (!result.won) {
-      return { floorsCleared: floor - 1, floor1MonsterSolves, floor1FightSeconds };
+      return { won: false, floorsCleared: floor - 1, floor1MonsterSolves, floor1FightSeconds };
     }
 
     if (isBossRoom) {
+      if (floor >= FINAL_FLOOR) {
+        return { won: true, floorsCleared: FINAL_FLOOR, floor1MonsterSolves, floor1FightSeconds };
+      }
       player = applyBossItem({ ...player, gold: player.gold + getBossReward(floor) }, floor).player;
       floor += 1;
       roomsCleared = 0;
@@ -194,12 +198,11 @@ export function simulateRun(profile: SkillProfile): RunResult {
       if (usefulDoor?.kind === "bargain" && profile.takesBargains) player = visitBargain(player);
     }
   }
-
-  return { floorsCleared: MAX_FLOOR, floor1MonsterSolves, floor1FightSeconds };
 }
 
 export function simulateMany(profile: SkillProfile, runs: number): SimulationSummary {
   const floorsCleared: number[] = [];
+  let wins = 0;
   let solveSum = 0;
   let solveCount = 0;
   let fightSecondsSum = 0;
@@ -208,6 +211,7 @@ export function simulateMany(profile: SkillProfile, runs: number): SimulationSum
   for (let run = 0; run < runs; run += 1) {
     const result = simulateRun(profile);
     floorsCleared.push(result.floorsCleared);
+    if (result.won) wins += 1;
     for (const solves of result.floor1MonsterSolves) {
       solveSum += solves;
       solveCount += 1;
@@ -220,12 +224,13 @@ export function simulateMany(profile: SkillProfile, runs: number): SimulationSum
 
   floorsCleared.sort((a, b) => a - b);
   const clearRateByFloor: number[] = [];
-  for (let floor = 1; floor <= 10; floor += 1) {
+  for (let floor = 1; floor <= FINAL_FLOOR; floor += 1) {
     clearRateByFloor.push(floorsCleared.filter((cleared) => cleared >= floor).length / runs);
   }
 
   return {
     runs,
+    winRate: wins / runs,
     medianFloorsCleared: floorsCleared[Math.floor(runs / 2)],
     clearRateByFloor,
     avgFloor1SolvesPerMonster: solveCount === 0 ? 0 : solveSum / solveCount,

@@ -24,10 +24,10 @@ export function makeEnemy(isBoss: boolean, floor: number): EnemyState {
     return { name: boss.name, hp: boss.hp, maxHp: boss.hp, damage: boss.damage, isBoss: true };
   }
 
-  // Tuned so a fresh sword (2 damage) kills a floor 1 monster in 3 solves.
+  // Tuned so a fresh sword (2 damage) kills a floor 1 monster in 5 solves.
   // Damage stays gentle early; the shrinking attack timer does the late scaling.
-  const hp = 4 + floor * 2;
-  const damage = 2 + floor;
+  const hp = 8 + floor * 2;
+  const damage = 1 + floor;
 
   return {
     name: monsterNames[Math.floor(Math.random() * monsterNames.length)],

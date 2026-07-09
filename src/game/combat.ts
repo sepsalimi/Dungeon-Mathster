@@ -4,7 +4,7 @@ import type { EnemyState, PlayerState } from "./types";
 // Enemies attack on a timer. Floor 1 gives slow solvers breathing room, then the
 // timer tightens by half a second per floor down to a hard cap.
 export function getEnemyAttackInterval(floor: number): number {
-  return Math.max(4_500, 7_500 - (floor - 1) * 500);
+  return Math.max(4_500, 8_000 - (floor - 1) * 500);
 }
 
 export interface EnemyAttackResult {

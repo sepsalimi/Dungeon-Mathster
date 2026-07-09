@@ -3,6 +3,8 @@ import type { ItemId, MathOperator, PlayerState } from "./types";
 
 export const STARTING_MAX_HP = 120;
 export const STARTING_SWORD_DAMAGE = 2;
+// Beating the boss of this floor wins the run.
+export const FINAL_FLOOR = 5;
 
 export interface BossDefinition {
   name: string;
@@ -18,43 +20,44 @@ export interface ItemDefinition {
   icon: string;
 }
 
-// Template HP targets roughly 5-6 correct answers at the sword damage a player
-// is expected to have on that floor. Damage stays a point or two above the
-// floor's normal monsters so bosses feel dangerous without one-shotting slow solvers.
+// One boss per floor across the 5-floor run. Template HP targets roughly 6-7
+// correct answers at the sword damage a player is expected to have on that
+// floor. Damage stays above the floor's normal monsters so bosses feel
+// dangerous without one-shotting slow solvers.
 const bossTemplates: BossDefinition[] = [
   {
     name: "Count Calculus",
-    hp: 10,
+    hp: 12,
     damage: 4,
     intro: "Three rooms brought you here, little solver. My grid is larger, and my sums bite harder.",
     item: "lifesteal",
   },
   {
     name: "Minus Wraith",
-    hp: 13,
-    damage: 6,
+    hp: 15,
+    damage: 5,
     intro: "Every step down takes something away. Show me you can survive subtraction.",
     item: "damageReductionArmor",
   },
   {
     name: "Product Golem",
-    hp: 16,
-    damage: 7,
+    hp: 18,
+    damage: 6,
     intro: "Multiplication comes first in my halls. Build the product before chasing the sum.",
     item: "barbedArmor",
   },
   {
     name: "Order Hydra",
-    hp: 20,
-    damage: 8,
+    hp: 22,
+    damage: 7,
     intro: "Many heads, one order. Keep your operations clean or lose the thread.",
     item: "goldBonus",
   },
   {
     name: "The Bedmas King",
-    hp: 24,
-    damage: 9,
-    intro: "Addition, subtraction, and products all answer to me.",
+    hp: 26,
+    damage: 8,
+    intro: "Addition, subtraction, and products all answer to me. Solve me, and the dungeon is yours.",
     item: "sword",
   },
 ];
@@ -117,15 +120,12 @@ export const itemDefinitions: Record<ItemId, ItemDefinition> = {
   },
 };
 
-// Cycle bonuses keep boss stats monotonic across the template wrap
-// (floor 5 Bedmas King -> floor 6 Count Calculus).
 export function getBossDefinition(floor: number): BossDefinition {
-  const template = bossTemplates[(floor - 1) % bossTemplates.length];
-  const cycle = Math.floor((floor - 1) / bossTemplates.length);
+  const template = bossTemplates[Math.min(floor - 1, bossTemplates.length - 1)];
   return {
     ...template,
-    hp: template.hp + cycle * 14 + (floor - 1) * 2,
-    damage: template.damage + cycle * 5 + (floor - 1),
+    hp: template.hp + (floor - 1) * 2,
+    damage: template.damage + (floor - 1),
   };
 }
 

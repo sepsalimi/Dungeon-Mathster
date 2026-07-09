@@ -11,6 +11,7 @@ import {
 import { applyLifesteal, getEnemyAttackInterval, resolveEnemyAttack } from "./combat";
 import { isCorrectPath, makePuzzle } from "./math";
 import {
+  FINAL_FLOOR,
   STARTING_MAX_HP,
   STARTING_SWORD_DAMAGE,
   applyBossItem,
@@ -177,6 +178,19 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
 
       if (current.enemy.isBoss) {
         const bossGold = getBossReward(current.floor);
+
+        if (current.floor >= FINAL_FLOOR) {
+          return {
+            ...current,
+            phase: "victory",
+            enemy: { ...current.enemy, hp: 0 },
+            puzzle: null,
+            doors: [],
+            player: { ...healedPlayer, gold: healedPlayer.gold + bossGold },
+            feedback: null,
+          };
+        }
+
         const bossReward = applyBossItem({ ...healedPlayer, gold: healedPlayer.gold + bossGold }, current.floor);
         const nextFloor = current.floor + 1;
         return {
@@ -328,6 +342,19 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         if (player.hp > 0 && enemyHp <= 0 && current.player.barbedArmor > 0) {
           if (current.enemy.isBoss) {
             const bossGold = getBossReward(current.floor);
+
+            if (current.floor >= FINAL_FLOOR) {
+              return {
+                ...current,
+                phase: "victory",
+                enemy: { ...current.enemy, hp: 0 },
+                puzzle: null,
+                doors: [],
+                player: { ...player, gold: player.gold + bossGold },
+                feedback: null,
+              };
+            }
+
             const bossReward = applyBossItem({ ...player, gold: player.gold + bossGold }, current.floor);
             const nextFloor = current.floor + 1;
             return {
