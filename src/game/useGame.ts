@@ -308,6 +308,7 @@ export function useGame() {
         puzzle: null,
         doors: [],
         player: { ...healedPlayer, gold: healedPlayer.gold + reward },
+        tutorial: current.tutorial ? "gold" : null,
         feedback: {
           kind: "hit",
           message: `Monster defeated. +${reward} gold.`,
@@ -466,7 +467,7 @@ export function useGame() {
           player,
           enemy: { ...current.enemy, hp: enemyHp },
           tutorialEnemyHitDone: true,
-          tutorial: null,
+          tutorial: "killEnemy",
           feedback: { kind: "enemy", message: "", nonce: Date.now(), amount: damage },
         };
       });

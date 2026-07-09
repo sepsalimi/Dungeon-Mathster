@@ -5,9 +5,10 @@ interface RoomSceneProps {
   feedback: FeedbackState | null;
   lowHealth: boolean;
   frozen: boolean;
+  highlightEnemyHealth?: boolean;
 }
 
-export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps) {
+export function RoomScene({ enemy, feedback, lowHealth, frozen, highlightEnemyHealth = false }: RoomSceneProps) {
   const feedbackClass = feedback ? `scene-feedback--${feedback.kind}` : "";
   const enemyAttackNonce = feedback?.kind === "enemy" ? feedback.nonce : null;
   const hitNonce = feedback?.kind === "hit" ? feedback.nonce : null;
@@ -49,7 +50,7 @@ export function RoomScene({ enemy, feedback, lowHealth, frozen }: RoomSceneProps
             <span className="monster-eye monster-eye--right" />
             <span className="monster-mouth" />
           </div>
-          <div className="enemy-plate">
+          <div className={["enemy-plate", highlightEnemyHealth ? "enemy-plate--tutorial" : ""].filter(Boolean).join(" ")}>
             <strong>{enemy.name}</strong>
             <div className="enemy-health">
               <span className="enemy-health-fill" style={{ width: `${enemyHpPercent}%` }} />

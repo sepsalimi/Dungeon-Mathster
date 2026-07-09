@@ -46,8 +46,8 @@ export const bargainOptions: BargainOption[] = [
   {
     id: "oracleLens",
     name: "Oracle Lens",
-    upside: "Often the first number in an answer glows.",
-    downside: "Lose 15 max HP permanently.",
+    upside: "25% chance the first number in an answer glows.",
+    downside: "Negative numbers enter the grid.",
   },
   {
     id: "negativeHeart",
@@ -86,9 +86,8 @@ export function applyBargain(
 
   if (id === "oracleLens") {
     next.oracleLensChance = Math.min(0.75, next.oracleLensChance + 0.25);
-    next.maxHp = Math.max(1, next.maxHp - 15);
-    next.hp = Math.min(next.hp, next.maxHp);
-    message = "Oracle Lens taken. Some answer starts will glow.";
+    next.negativesUnlocked = true;
+    message = "Oracle Lens taken. 25% answer starts will glow. Negative numbers enter the grid.";
   }
   if (id === "negativeHeart") {
     next.maxHp += 30;
