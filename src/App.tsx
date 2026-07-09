@@ -6,6 +6,7 @@ import { PauseOverlay } from "./components/PauseOverlay";
 import { RunEndView } from "./components/RunEndView";
 import { ShopView } from "./components/ShopView";
 import { StartScreen } from "./components/StartScreen";
+import { TutorialOfferOverlay } from "./components/TutorialOfferOverlay";
 import { TutorialOverlay } from "./components/TutorialOverlay";
 import { useGame } from "./game/useGame";
 
@@ -46,7 +47,12 @@ export default function App() {
       {game.state.tutorial && !game.state.paused && (
         <TutorialOverlay step={game.state.tutorial} onSkip={game.skipTutorial} />
       )}
-      {game.state.paused && <PauseOverlay onResume={game.resumeGame} onRestart={game.startRun} />}
+      {game.state.paused && game.state.tutorialOffer && (
+        <TutorialOfferOverlay onAccept={game.acceptTutorialOffer} onDecline={game.declineTutorialOffer} />
+      )}
+      {game.state.paused && !game.state.tutorialOffer && (
+        <PauseOverlay onResume={game.resumeGame} onRestart={game.startRun} />
+      )}
     </main>
   );
 }
