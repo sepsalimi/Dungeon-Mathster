@@ -38,9 +38,12 @@ export function getItemStatLine(id: ItemId, player: PlayerState): string | null 
     case "maxHp":
       return `${player.maxHp} max HP`;
     case "temporaryArmor":
-      return player.temporaryHp > 0 ? `${player.temporaryHp} temp HP` : "+25 temp HP per buy";
+      return player.temporaryHp > 0 ? `${player.temporaryHp} shield HP` : "+25 shield HP per buy";
     case "oracleLens":
-      return player.oracleLensChance > 0 ? `${Math.round(player.oracleLensChance * 100)}% glow chance` : null;
+      if (player.oracleLensChance <= 0) return null;
+      return player.oraclePathNumbers >= 2
+        ? `${Math.round(player.oracleLensChance * 100)}% two-number path`
+        : `${Math.round(player.oracleLensChance * 100)}% start glow`;
     case "glassBlade":
       return player.swordDamage > STARTING_SWORD_DAMAGE ? `Deal ${player.swordDamage} damage` : null;
     case "coinHex":

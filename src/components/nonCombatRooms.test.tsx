@@ -20,6 +20,7 @@ const state: GameState = {
     barbedArmor: 0,
     swordDamage: 1,
     oracleLensChance: 0,
+    oraclePathNumbers: 0,
     negativesUnlocked: false,
     extraDamageTaken: 0,
     lifesteal: 0,
@@ -54,9 +55,27 @@ describe("non-combat rooms", () => {
 
     expect(html).toContain("100/100");
     expect(html).toContain("Damage Reduction Armor");
-    expect(html).toContain("Armor");
+    expect(html).toContain("Shield");
+    expect(html).toContain("Gain 25 shield HP.");
     expect(html).toContain("Barbed Armor");
     expect(html).not.toContain("Freeze");
+  });
+
+  it("shows temporary shield HP as a silver shield bar", () => {
+    const html = renderToStaticMarkup(
+      <ShopView
+        state={{ ...state, player: { ...state.player, temporaryHp: 25 } }}
+        soundLevel="mute"
+        onPause={() => undefined}
+        onCycleSoundLevel={() => undefined}
+        onBuyUpgrade={() => undefined}
+        onContinue={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("Player HP 100 of 100, Shield 25");
+    expect(html).toContain("player-vitals__shield");
+    expect(html).toContain("item-icon--shield");
   });
 
   it("guides the tutorial player to buy health before continuing", () => {

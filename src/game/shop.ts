@@ -7,7 +7,7 @@ export const shopUpgrades: ShopUpgrade[] = [
   { id: "heal", name: "Heal HP", description: "Restore 35 HP now.", cost: 15, costStep: 0 },
   { id: "maxHp", name: "Increase Max HP", description: "Gain 20 max HP and heal 20.", cost: 30, costStep: 10 },
   { id: "damageReductionArmor", name: "Damage Reduction Armor", description: "Reduce monster attacks by 1.", cost: 30, costStep: 15 },
-  { id: "temporaryArmor", name: "Armor", description: "Gain 25 temporary HP.", cost: 20, costStep: 0 },
+  { id: "temporaryArmor", name: "Shield", description: "Gain 25 shield HP.", cost: 20, costStep: 0 },
   { id: "barbedArmor", name: "Barbed Armor", description: "Deal 1 damage when enemies hit you.", cost: 25, costStep: 10 },
   { id: "sword", name: "Sword Upgrade", description: "Deal 1 extra damage per correct answer.", cost: 35, costStep: 15 },
 ];
@@ -74,12 +74,14 @@ export function applyBargain(
   id: BargainId,
   rng: () => number = Math.random,
 ): { player: PlayerState; message: string; item: ItemId | null } {
-  let next = addItem({ ...player }, id === "giantEquation" ? "longEquation" : id);
+  let next = id === "oracleLens" ? { ...player } : addItem({ ...player }, id === "giantEquation" ? "longEquation" : id);
   let message = bargainOptions.find((option) => option.id === id)?.name ?? "Bargain taken";
   let item: ItemId | null = id === "giantEquation" ? "longEquation" : id;
 
   if (id === "oracleLens") {
-    next.oracleLensChance = Math.min(0.75, next.oracleLensChance + 0.25);
+    next = getItemCount(player, "oracleLens") === 0 ? addItem(next, "oracleLens") : next;
+    next.oracleLensChance = 0.25;
+    next.oraclePathNumbers = Math.max(next.oraclePathNumbers, 1);
     if (player.negativesUnlocked) {
       next.maxHp = Math.max(1, next.maxHp - 20);
       next.hp = Math.min(next.hp, next.maxHp);

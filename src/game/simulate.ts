@@ -47,6 +47,7 @@ function makeSimPlayer(): PlayerState {
     barbedArmor: 0,
     swordDamage: STARTING_SWORD_DAMAGE,
     oracleLensChance: 0,
+    oraclePathNumbers: 0,
     negativesUnlocked: false,
     extraDamageTaken: 0,
     lifesteal: 0,

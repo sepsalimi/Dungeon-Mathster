@@ -21,10 +21,13 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
   const highlightTarget = state.tutorial === "swipe" || state.tutorial === "killEnemy";
   const highlightPlayerHealth = state.tutorial === "enemyHit" || state.tutorial === "killEnemy";
   const guidePath = state.tutorial === "swipe" || state.tutorial === "killEnemy" ? state.puzzle?.answerPath : null;
-  const startHintId = useMemo(() => {
+  const answerPathKey = state.puzzle?.answerPath.join("|") ?? "";
+  const oracleHintPath = useMemo(() => {
     if (!state.puzzle || state.player.oracleLensChance <= 0) return null;
-    return Math.random() < state.player.oracleLensChance ? state.puzzle.answerPath[0] : null;
-  }, [state.puzzle?.target, state.puzzle?.answerPath[0], state.player.oracleLensChance]);
+    if (Math.random() >= state.player.oracleLensChance) return null;
+    const hintLength = Math.max(1, state.player.oraclePathNumbers) * 2 - 1;
+    return state.puzzle.answerPath.slice(0, hintLength);
+  }, [state.puzzle?.target, answerPathKey, state.player.oracleLensChance, state.player.oraclePathNumbers]);
 
   return (
     <div className={["game-screen", lowHealth ? "game-screen--danger" : "", hurtNonce ? "game-screen--hurt" : ""].filter(Boolean).join(" ")}>
@@ -41,7 +44,7 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
         <MathGrid
           player={state.player}
           puzzle={state.puzzle}
-          startHintId={startHintId}
+          oracleHintPath={oracleHintPath}
           guidePath={guidePath}
           highlightTarget={highlightTarget}
           highlightPlayerHealth={highlightPlayerHealth}
