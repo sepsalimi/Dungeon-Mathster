@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/Dungeon-Mathster/sw.js', { scope: '/Dungeon-Mathster/' })})}
