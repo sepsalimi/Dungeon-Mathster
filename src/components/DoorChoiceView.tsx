@@ -1,5 +1,6 @@
 import type { DoorChoice, GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
+import { RewardCue } from "./RewardCue";
 
 interface DoorChoiceViewProps {
   state: GameState;
@@ -16,6 +17,7 @@ export function DoorChoiceView({ state, soundLevel, onPause, onCycleSoundLevel, 
   return (
     <div className="game-screen">
       <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
+      <RewardCue feedback={state.feedback} />
       <section
         className={tutorialDoorStep ? "door-room door-room--tutorial" : "door-room"}
         aria-label="Choose a dungeon door"

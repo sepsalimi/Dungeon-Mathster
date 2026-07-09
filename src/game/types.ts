@@ -79,7 +79,12 @@ export interface FeedbackState {
   message: string;
   nonce: number;
   amount?: number;
+  rewards?: RewardCue[];
 }
+
+export type RewardCue =
+  | { kind: "gold"; amount: number }
+  | { kind: "item"; itemId: ItemId };
 
 export interface GameState {
   phase: GamePhase;

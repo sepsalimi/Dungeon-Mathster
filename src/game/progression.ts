@@ -144,7 +144,7 @@ export function getBossReward(floor: number): number {
   return 45 + floor * 15;
 }
 
-export function applyBossItem(player: PlayerState, floor: number): { player: PlayerState; message: string } {
+export function applyBossItem(player: PlayerState, floor: number): { player: PlayerState; message: string; item: ItemId } {
   const item = getBossDefinition(floor).item;
   let rewardedPlayer = addItem(player, item);
 
@@ -164,7 +164,7 @@ export function applyBossItem(player: PlayerState, floor: number): { player: Pla
     rewardedPlayer = { ...rewardedPlayer, swordDamage: rewardedPlayer.swordDamage + 1 };
   }
 
-  return { player: rewardedPlayer, message: `${itemDefinitions[item].name} found.` };
+  return { player: rewardedPlayer, message: `${itemDefinitions[item].name} found.`, item };
 }
 
 export function addItem(player: PlayerState, item: ItemId, amount = 1): PlayerState {
