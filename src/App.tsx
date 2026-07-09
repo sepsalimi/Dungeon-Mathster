@@ -53,7 +53,11 @@ export default function App() {
         <RunEndView state={game.state} onRestart={() => game.startRun(false)} />
       )}
       {game.state.tutorial && !game.state.paused && ["combat", "door", "shop"].includes(game.state.phase) && (
-        <TutorialOverlay step={game.state.tutorial} onSkip={game.skipTutorial} />
+        <TutorialOverlay
+          step={game.state.tutorial}
+          target={game.state.phase === "combat" ? game.state.puzzle?.target : null}
+          onSkip={game.skipTutorial}
+        />
       )}
       {game.state.paused && (
         <PauseOverlay onResume={game.resumeGame} onRestart={() => game.startRun(false)} />

@@ -7,6 +7,7 @@ interface MathGridProps {
   puzzle: Puzzle;
   startHintId?: string | null;
   guidePath?: string[] | null;
+  highlightTarget?: boolean;
   highlightPlayerHealth?: boolean;
   onSubmitPath: (path: string[]) => void;
 }
@@ -18,7 +19,15 @@ interface DragPoint {
 
 const dragSampleSpacing = 12;
 
-export function MathGrid({ player, puzzle, startHintId, guidePath, highlightPlayerHealth = false, onSubmitPath }: MathGridProps) {
+export function MathGrid({
+  player,
+  puzzle,
+  startHintId,
+  guidePath,
+  highlightTarget = false,
+  highlightPlayerHealth = false,
+  onSubmitPath,
+}: MathGridProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const selectedRef = useRef<string[]>([]);
   const activeInput = useRef<"pointer" | "touch" | null>(null);
@@ -152,7 +161,7 @@ export function MathGrid({ player, puzzle, startHintId, guidePath, highlightPlay
 
   return (
     <section className="math-panel" aria-label="Swipe math grid">
-      <div className="target-card">
+      <div className={["target-card", highlightTarget ? "target-card--tutorial" : ""].filter(Boolean).join(" ")}>
         <span>Make</span>
         <strong>{puzzle.target}</strong>
       </div>
