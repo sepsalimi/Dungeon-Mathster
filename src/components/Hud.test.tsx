@@ -8,6 +8,7 @@ const hudState: GameState = {
   phase: "combat",
   floor: 1,
   roomsCleared: 0,
+  monsterRoomsCleared: 0,
   player: {
     hp: 100,
     maxHp: 100,
