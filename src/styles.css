@@ -1477,6 +1477,12 @@ p {
   line-height: 1.04;
 }
 
+.floor-intro__prompt .primary-action {
+  color: #22151a;
+  background: #f0d88d;
+  border-color: #6d4a2c;
+}
+
 .floor-intro--fade .floor-intro__content {
   animation: floor-fade-out 700ms ease-in forwards;
 }
