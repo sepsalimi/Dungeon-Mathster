@@ -13,10 +13,14 @@ export function FloorIntroView({ floor, showScroll, onReady }: FloorIntroViewPro
   const [stage, setStage] = useState<IntroStage>(showScroll ? "scroll" : "prompt");
 
   useEffect(() => {
-    if (!showScroll) return;
+    setStage(showScroll ? "scroll" : "prompt");
+  }, [floor, showScroll]);
+
+  useEffect(() => {
+    if (stage !== "scroll") return;
     const timer = window.setTimeout(() => setStage("prompt"), 3_900);
     return () => window.clearTimeout(timer);
-  }, [showScroll]);
+  }, [stage]);
 
   const handleReady = () => {
     setStage("fade");
