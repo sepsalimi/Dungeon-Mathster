@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent, type TouchEvent } from "react";
 import type { GridTile, Puzzle } from "../game/types";
 
 interface MathGridProps {
@@ -8,27 +8,32 @@ interface MathGridProps {
 }
 
 export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
-  const [isDragging, setIsDragging] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const selectedRef = useRef<string[]>([]);
+  const activeInput = useRef<"pointer" | "touch" | null>(null);
+  const activePointerId = useRef<number | null>(null);
+  const activeTouchId = useRef<number | null>(null);
   const tileMap = useMemo(() => new Map(puzzle.tiles.map((tile) => [tile.id, tile])), [puzzle.tiles]);
 
   useEffect(() => {
-    setSelected([]);
-    setIsDragging(false);
+    resetSwipe();
   }, [puzzle.target, puzzle.tiles]);
 
   function addTile(id: string) {
-    setSelected((current) => {
-      const tile = tileMap.get(id);
-      if (!tile || current.includes(id)) return current;
-      if (current.length === 0) return tile.type === "number" ? [id] : current;
+    const current = selectedRef.current;
+    const tile = tileMap.get(id);
+    if (!tile || current.includes(id)) return;
 
-      const last = tileMap.get(current[current.length - 1]);
-      if (!last || Math.abs(last.row - tile.row) + Math.abs(last.col - tile.col) !== 1) return current;
+    if (current.length === 0) {
+      if (tile.type === "number") setSelectedPath([id]);
+      return;
+    }
 
-      const expectedType = current.length % 2 === 0 ? "number" : "operator";
-      return tile.type === expectedType ? [...current, id] : current;
-    });
+    const last = tileMap.get(current[current.length - 1]);
+    if (!last || Math.abs(last.row - tile.row) + Math.abs(last.col - tile.col) !== 1) return;
+
+    const expectedType = current.length % 2 === 0 ? "number" : "operator";
+    if (tile.type === expectedType) setSelectedPath([...current, id]);
   }
 
   function findTileFromPoint(clientX: number, clientY: number): string | null {
@@ -36,24 +41,82 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
     return element?.closest<HTMLElement>("[data-tile-id]")?.dataset.tileId ?? null;
   }
 
+  function setSelectedPath(path: string[]) {
+    selectedRef.current = path;
+    setSelected(path);
+  }
+
+  function startSwipe(tile: GridTile) {
+    setSelectedPath(tile.type === "number" ? [tile.id] : []);
+  }
+
+  function resetSwipe() {
+    activeInput.current = null;
+    activePointerId.current = null;
+    activeTouchId.current = null;
+    setSelectedPath([]);
+  }
+
   function handlePointerDown(event: PointerEvent<HTMLButtonElement>, tile: GridTile) {
+    if (activeInput.current || (event.pointerType === "mouse" && event.button !== 0)) return;
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setIsDragging(true);
-    setSelected([]);
-    if (tile.type === "number") setSelected([tile.id]);
+    activeInput.current = "pointer";
+    activePointerId.current = event.pointerId;
+    startSwipe(tile);
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (!isDragging) return;
+    if (activeInput.current !== "pointer" || activePointerId.current !== event.pointerId) return;
+    event.preventDefault();
     const id = findTileFromPoint(event.clientX, event.clientY);
     if (id) addTile(id);
   }
 
+  function finishPointerSwipe(event: PointerEvent<HTMLDivElement>) {
+    if (activeInput.current !== "pointer" || activePointerId.current !== event.pointerId) return;
+    event.preventDefault();
+    finishSwipe();
+  }
+
+  function handleTouchStart(event: TouchEvent<HTMLButtonElement>, tile: GridTile) {
+    if (activeInput.current) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+
+    event.preventDefault();
+    activeInput.current = "touch";
+    activeTouchId.current = touch.identifier;
+    startSwipe(tile);
+  }
+
+  function handleTouchMove(event: TouchEvent<HTMLDivElement>) {
+    if (activeInput.current !== "touch") return;
+    const touch = findActiveTouch(event.changedTouches);
+    if (!touch) return;
+
+    event.preventDefault();
+    const id = findTileFromPoint(touch.clientX, touch.clientY);
+    if (id) addTile(id);
+  }
+
+  function finishTouchSwipe(event: TouchEvent<HTMLDivElement>) {
+    if (activeInput.current !== "touch" || !findActiveTouch(event.changedTouches)) return;
+    event.preventDefault();
+    finishSwipe();
+  }
+
+  function findActiveTouch(touches: TouchList): Touch | null {
+    for (let index = 0; index < touches.length; index += 1) {
+      const touch = touches.item(index);
+      if (touch?.identifier === activeTouchId.current) return touch;
+    }
+    return null;
+  }
+
   function finishSwipe() {
-    if (isDragging && selected.length > 0) onSubmitPath(selected);
-    setSelected([]);
-    setIsDragging(false);
+    const path = selectedRef.current;
+    if (activeInput.current && path.length > 0) onSubmitPath(path);
+    resetSwipe();
   }
 
   return (
@@ -66,9 +129,12 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
         className={`math-grid math-grid--${puzzle.size}`}
         style={{ gridTemplateColumns: `repeat(${puzzle.size}, 1fr)` }}
         onPointerMove={handlePointerMove}
-        onPointerUp={finishSwipe}
-        onPointerCancel={finishSwipe}
-        onPointerLeave={finishSwipe}
+        onPointerUp={finishPointerSwipe}
+        onPointerCancel={finishPointerSwipe}
+        onPointerLeave={finishPointerSwipe}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={finishTouchSwipe}
+        onTouchCancel={finishTouchSwipe}
       >
         {puzzle.tiles.map((tile) => {
           const selectedIndex = selected.indexOf(tile.id);
@@ -83,6 +149,7 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
                 .join(" ")}
               data-tile-id={tile.id}
               onPointerDown={(event) => handlePointerDown(event, tile)}
+              onTouchStart={(event) => handleTouchStart(event, tile)}
             >
               <span>{tile.value}</span>
               {isStartHint && !isSelected && <b>Start</b>}

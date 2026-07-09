@@ -588,6 +588,8 @@ button {
   margin: 0 auto;
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .math-tile {
@@ -599,6 +601,9 @@ button {
   border: 3px solid #111017;
   box-shadow: 0 5px 0 #050407;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .math-tile span {
