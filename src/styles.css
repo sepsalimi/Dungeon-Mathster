@@ -588,6 +588,8 @@ button {
 }
 
 .target-card--tutorial {
+  position: relative;
+  z-index: 2;
   outline: 3px solid rgba(157, 242, 255, 0.82);
   box-shadow: 0 4px 0 #0b0910, 0 0 22px rgba(157, 242, 255, 0.48);
 }
