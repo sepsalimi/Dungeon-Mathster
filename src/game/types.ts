@@ -75,12 +75,6 @@ export interface DoorChoice {
   tone: "danger" | "safe" | "rare";
 }
 
-export interface FightStats {
-  misses: number;
-  hitsTaken: number;
-  correctHits: number;
-}
-
 export interface FeedbackState {
   kind: "hit" | "miss" | "enemy" | "buy" | "blocked" | "pause";
   message: string;
@@ -92,12 +86,6 @@ export interface FeedbackState {
 export type RewardCue =
   | { kind: "gold"; amount: number }
   | { kind: "item"; itemId: ItemId };
-
-export const emptyFightStats = (): FightStats => ({
-  misses: 0,
-  hitsTaken: 0,
-  correctHits: 0,
-});
 
 export interface GameState {
   phase: GamePhase;
@@ -115,9 +103,6 @@ export interface GameState {
   showFloorScroll: boolean;
   floorIntroNonce: number;
   pendingBossFight: boolean;
-  fightStats: FightStats;
-  struggleTutorialOffered: boolean;
-  tutorialOffer: boolean;
 }
 
 export type ShopUpgradeId = "heal" | "maxHp" | "damageReductionArmor" | "temporaryArmor" | "barbedArmor" | "sword";
