@@ -12,7 +12,7 @@ interface BossIntroProps {
 export function BossIntro({ state, soundLevel, onPause, onCycleSoundLevel, onContinue }: BossIntroProps) {
   return (
     <div className="game-screen">
-      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
+      <Hud gold={state.player.gold} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <section className="boss-intro">
         <div className="boss-portrait">
           <span className="boss-eye boss-eye--left" />

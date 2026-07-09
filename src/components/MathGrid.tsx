@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type Touch, type TouchEvent } from "react";
-import type { GridTile, Puzzle } from "../game/types";
+import type { GridTile, PlayerState, Puzzle } from "../game/types";
 
 interface MathGridProps {
+  player: PlayerState;
   puzzle: Puzzle;
   startHintId?: string | null;
   onSubmitPath: (path: string[]) => void;
@@ -14,7 +15,7 @@ interface DragPoint {
 
 const dragSampleSpacing = 12;
 
-export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
+export function MathGrid({ player, puzzle, startHintId, onSubmitPath }: MathGridProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const selectedRef = useRef<string[]>([]);
   const activeInput = useRef<"pointer" | "touch" | null>(null);
@@ -22,6 +23,7 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
   const activeTouchId = useRef<number | null>(null);
   const lastPoint = useRef<DragPoint | null>(null);
   const tileMap = useMemo(() => new Map(puzzle.tiles.map((tile) => [tile.id, tile])), [puzzle.tiles]);
+  const hpPercent = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
 
   useEffect(() => {
     resetSwipe();
@@ -149,6 +151,22 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
       <div className="target-card">
         <span>Make</span>
         <strong>{puzzle.target}</strong>
+      </div>
+      <div className="player-health-card" aria-label={`Player HP ${player.hp} of ${player.maxHp}`}>
+        <div className="player-health-label">
+          <span>Player HP</span>
+          <strong>
+            {player.hp}/{player.maxHp}
+          </strong>
+        </div>
+        <div className="player-health-track">
+          <div className="player-health-fill" style={{ width: `${hpPercent}%` }} />
+        </div>
+        {player.lifesteal > 0 && (
+          <div className="relic-badge" aria-label={`Lifesteal heals ${player.lifesteal} HP per hit`}>
+            Lifesteal +{player.lifesteal}
+          </div>
+        )}
       </div>
       <div
         className={`math-grid math-grid--${puzzle.size}`}
