@@ -956,6 +956,85 @@ p {
   padding-top: 1.2rem;
 }
 
+@media (max-height: 640px) {
+  .shop-room {
+    gap: 0.48rem;
+    padding: 0.55rem 0.65rem max(0.55rem, env(safe-area-inset-bottom));
+    overflow: hidden;
+  }
+
+  .shop-room--tutorial {
+    padding-top: 7.2rem;
+  }
+
+  .shop-room .merchant {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+    text-align: center;
+  }
+
+  .shop-room .merchant-sprite {
+    display: none;
+  }
+
+  .shop-room h1 {
+    font-size: clamp(1.45rem, 7.6vw, 2rem);
+  }
+
+  .shop-room .player-vitals {
+    gap: 0.22rem 0.5rem;
+    padding: 0.38rem 0.52rem;
+  }
+
+  .shop-room .player-vitals span {
+    font-size: 0.64rem;
+  }
+
+  .shop-room .player-vitals strong {
+    font-size: 0.88rem;
+  }
+
+  .shop-room .player-vitals__track {
+    height: 0.52rem;
+  }
+
+  .shop-room .upgrade-list {
+    gap: 0.28rem;
+  }
+
+  .shop-room .upgrade-row {
+    min-height: 2.7rem;
+    gap: 0.45rem;
+    padding: 0.42rem 0.52rem;
+    box-shadow: 0 3px 0 #08070b;
+  }
+
+  .shop-room .upgrade-row strong {
+    font-size: clamp(0.9rem, 4.2vw, 1rem);
+  }
+
+  .shop-room .upgrade-row small {
+    margin-top: 0.08rem;
+    font-size: clamp(0.72rem, 3.25vw, 0.8rem);
+    line-height: 1.12;
+  }
+
+  .shop-room .upgrade-row em {
+    font-size: clamp(0.86rem, 3.8vw, 0.98rem);
+  }
+
+  .shop-room .primary-action {
+    min-height: 2.45rem;
+    padding: 0.42rem 0.7rem;
+  }
+
+  .shop-room .shop-toast {
+    padding: 0.42rem 0.55rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+}
+
 .merchant {
   display: grid;
   grid-template-columns: auto 1fr;
