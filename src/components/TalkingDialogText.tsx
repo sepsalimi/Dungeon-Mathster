@@ -1,7 +1,7 @@
 // Renders a boss dialog line one character at a time and reports each spoken beat.
 import { useEffect, useState } from "react";
 
-const LETTER_STEP_MS = 34;
+const LETTER_STEP_MS = 58;
 
 interface TalkingDialogTextProps {
   text: string;
