@@ -1,4 +1,4 @@
-import { bargainOptions } from "../game/shop";
+import { bargainOptions, getBargainDownside } from "../game/shop";
 import type { BargainId, GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 import { PlayerVitals } from "./PlayerVitals";
@@ -26,7 +26,7 @@ export function BargainView({ state, soundLevel, onPause, onCycleSoundLevel, onT
             <button key={option.id} type="button" className="bargain-card" onClick={() => onTakeBargain(option.id)}>
               <strong>{option.name}</strong>
               <span className="bargain-upside">{option.upside}</span>
-              <span className="bargain-downside">{option.downside}</span>
+              <span className="bargain-downside">{getBargainDownside(state.player, option.id)}</span>
             </button>
           ))}
         </div>

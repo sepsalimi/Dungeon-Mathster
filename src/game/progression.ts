@@ -1,7 +1,7 @@
 // Defines floor rules, boss item rewards, and item labels for the dungeon run.
 import type { ItemId, MathOperator, PlayerState } from "./types";
 
-export const STARTING_MAX_HP = 120;
+export const STARTING_MAX_HP = 100;
 export const STARTING_SWORD_DAMAGE = 2;
 // Beating the boss of this floor wins the run.
 export const FINAL_FLOOR = 5;
@@ -29,7 +29,7 @@ const bossTemplates: BossDefinition[] = [
     name: "Count Calculus",
     hp: 12,
     damage: 4,
-    intro: "Three rooms brought you here, little solver. My grid is larger, and my sums bite harder.",
+    intro: "Five doors brought you here, little solver. My grid is larger, and my sums bite harder.",
     item: "lifesteal",
   },
   {
@@ -67,11 +67,6 @@ export const itemDefinitions: Record<ItemId, ItemDefinition> = {
     name: "Oracle Lens",
     description: "Chance to glow the first answer tile.",
     icon: "eye",
-  },
-  negativeHeart: {
-    name: "Negative Heart",
-    description: "Negative numbers enter the grid.",
-    icon: "heart",
   },
   glassBlade: {
     name: "Glass Blade",

@@ -8,9 +8,10 @@ const combatState: GameState = {
   phase: "combat",
   floor: 1,
   roomsCleared: 0,
+  monsterRoomsCleared: 0,
   player: {
-    hp: 118,
-    maxHp: 120,
+    hp: 98,
+    maxHp: 100,
     temporaryHp: 0,
     gold: 0,
     goldBonus: 0,
@@ -59,7 +60,7 @@ const combatState: GameState = {
 };
 
 describe("CombatView tutorial cues", () => {
-  it("keeps the swipe guide and enemy health highlight visible while finishing the tutorial enemy", () => {
+  it("keeps the swipe guide and health highlights visible while finishing the tutorial enemy", () => {
     const html = renderToStaticMarkup(
       <CombatView
         state={combatState}
@@ -73,5 +74,21 @@ describe("CombatView tutorial cues", () => {
     expect(html).toContain("swipe-guide");
     expect(html).toContain("target-card--tutorial");
     expect(html).toContain("enemy-plate--tutorial");
+    expect(html).toContain("player-health-card--tutorial");
+  });
+
+  it("raises the HUD and highlights gold during the gold tutorial step", () => {
+    const html = renderToStaticMarkup(
+      <CombatView
+        state={{ ...combatState, enemy: null, puzzle: null, tutorial: "gold", player: { ...combatState.player, gold: 18 } }}
+        soundLevel="mute"
+        onPause={() => undefined}
+        onCycleSoundLevel={() => undefined}
+        onSubmitPath={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("hud--gold-tutorial");
+    expect(html).toContain("gold-chip--tutorial");
   });
 });

@@ -50,12 +50,6 @@ export const bargainOptions: BargainOption[] = [
     downside: "Negative numbers enter the grid.",
   },
   {
-    id: "negativeHeart",
-    name: "Negative Heart",
-    upside: "Monster answers need 1 extra number when the grid can fit it.",
-    downside: "Negative numbers enter the grid.",
-  },
-  {
     id: "glassBlade",
     name: "Glass Blade",
     upside: "Double your sword damage.",
@@ -86,13 +80,14 @@ export function applyBargain(
 
   if (id === "oracleLens") {
     next.oracleLensChance = Math.min(0.75, next.oracleLensChance + 0.25);
-    next.negativesUnlocked = true;
-    message = "Oracle Lens taken. 25% answer starts will glow. Negative numbers enter the grid.";
-  }
-  if (id === "negativeHeart") {
-    next.permutationBonus += 1;
-    next.negativesUnlocked = true;
-    message = "Negative Heart taken. Monster answers grow longer. Negative numbers enter the grid.";
+    if (player.negativesUnlocked) {
+      next.maxHp = Math.max(1, next.maxHp - 20);
+      next.hp = Math.min(next.hp, next.maxHp);
+      message = "Oracle Lens taken. 25% answer starts will glow. Max HP reduced by 20.";
+    } else {
+      next.negativesUnlocked = true;
+      message = "Oracle Lens taken. 25% answer starts will glow. Negative numbers enter the grid.";
+    }
   }
   if (id === "glassBlade") {
     next.swordDamage = Math.max(1, next.swordDamage * 2);
@@ -118,6 +113,13 @@ export function applyBargain(
   }
 
   return { player: next, message, item };
+}
+
+export function getBargainDownside(player: PlayerState, id: BargainId): string {
+  const option = bargainOptions.find((candidate) => candidate.id === id);
+  if (!option) return "";
+  if (id === "oracleLens" && player.negativesUnlocked) return "Lose 20 max HP.";
+  return option.downside;
 }
 
 export function getShopRewardItem(id: ShopUpgradeId): ItemId | null {

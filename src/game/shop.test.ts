@@ -5,8 +5,8 @@ import type { PlayerState } from "./types";
 
 function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
-    hp: 120,
-    maxHp: 120,
+    hp: 100,
+    maxHp: 100,
     temporaryHp: 0,
     gold: 0,
     goldBonus: 0,
@@ -29,20 +29,20 @@ describe("bargain options", () => {
 
     expect(player.oracleLensChance).toBe(0.25);
     expect(player.negativesUnlocked).toBe(true);
-    expect(player.maxHp).toBe(120);
+    expect(player.maxHp).toBe(100);
     expect(message).toContain("25%");
     expect(message).toContain("Negative numbers enter the grid.");
     expect(item).toBe("oracleLens");
   });
 
-  it("Negative Heart adds a monster answer permutation instead of max HP", () => {
-    const { player, message, item } = applyBargain(makePlayer(), "negativeHeart");
+  it("Oracle Lens costs 20 max HP when negative numbers are already in the grid", () => {
+    const first = applyBargain(makePlayer(), "oracleLens");
+    const { player, message } = applyBargain(first.player, "oracleLens");
 
-    expect(player.permutationBonus).toBe(1);
+    expect(player.oracleLensChance).toBe(0.5);
     expect(player.negativesUnlocked).toBe(true);
-    expect(player.maxHp).toBe(120);
-    expect(player.hp).toBe(120);
-    expect(message).toContain("Monster answers grow longer.");
-    expect(item).toBe("negativeHeart");
+    expect(player.maxHp).toBe(80);
+    expect(player.hp).toBe(80);
+    expect(message).toContain("Max HP reduced by 20.");
   });
 });

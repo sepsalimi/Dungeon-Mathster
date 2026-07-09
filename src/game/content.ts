@@ -3,7 +3,8 @@ import type { DoorChoice, EnemyState } from "./types";
 import { getBossDefinition } from "./progression";
 
 export const MONSTER_REWARD = 18;
-export const MONSTER_ROOMS_BEFORE_BOSS = 3;
+export const ROOMS_BEFORE_BOSS = 5;
+export const MIN_MONSTER_ROOMS_BEFORE_BOSS = 3;
 export const MYSTERY_HEAL = 25;
 export const MYSTERY_GOLD = 10;
 
@@ -27,7 +28,7 @@ export function makeEnemy(isBoss: boolean, floor: number): EnemyState {
   // Tuned so a fresh sword (2 damage) kills a floor 1 monster in 5 solves.
   // Damage stays gentle early; the shrinking attack timer does the late scaling.
   const hp = 8 + floor * 2;
-  const damage = 1 + floor;
+  const damage = 1 + floor + (floor === 1 ? 1 : 0);
 
   return {
     name: monsterNames[Math.floor(Math.random() * monsterNames.length)],
@@ -38,12 +39,11 @@ export function makeEnemy(isBoss: boolean, floor: number): EnemyState {
   };
 }
 
-export function makeDoorChoices(roomsCleared: number): DoorChoice[] {
-  if (roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS) {
+export function makeDoorChoices(roomsCleared: number, monsterRoomsCleared: number): DoorChoice[] {
+  if (roomsCleared >= ROOMS_BEFORE_BOSS) {
     return [{ id: "boss-gate", kind: "boss", label: "Boss Gate", icon: "crown", tone: "danger" }];
   }
 
-  const usefulDoor: DoorChoice = pickUsefulDoor(roomsCleared);
   const fightDoor: DoorChoice = {
     id: "fight-monster",
     kind: "monster",
@@ -52,7 +52,17 @@ export function makeDoorChoices(roomsCleared: number): DoorChoice[] {
     tone: "danger",
   };
 
+  if (!canChooseUsefulDoor(roomsCleared, monsterRoomsCleared)) {
+    return [fightDoor];
+  }
+
+  const usefulDoor: DoorChoice = pickUsefulDoor(roomsCleared);
   return Math.random() > 0.5 ? [usefulDoor, fightDoor] : [fightDoor, usefulDoor];
+}
+
+function canChooseUsefulDoor(roomsCleared: number, monsterRoomsCleared: number): boolean {
+  const remainingRoomsAfterThisChoice = ROOMS_BEFORE_BOSS - roomsCleared - 1;
+  return monsterRoomsCleared + remainingRoomsAfterThisChoice >= MIN_MONSTER_ROOMS_BEFORE_BOSS;
 }
 
 function pickUsefulDoor(roomsCleared: number): DoorChoice {
