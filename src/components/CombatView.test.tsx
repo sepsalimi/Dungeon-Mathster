@@ -8,6 +8,7 @@ const combatState: GameState = {
   phase: "combat",
   floor: 1,
   roomsCleared: 0,
+  monsterRoomsCleared: 0,
   player: {
     hp: 98,
     maxHp: 100,

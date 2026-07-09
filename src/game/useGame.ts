@@ -15,9 +15,9 @@ import {
   makeDoorChoices,
   makeEnemy,
   MONSTER_REWARD,
-  MONSTER_ROOMS_BEFORE_BOSS,
   MYSTERY_GOLD,
   MYSTERY_HEAL,
+  ROOMS_BEFORE_BOSS,
 } from "./content";
 import { applyLifesteal, getEnemyAttackInterval, resolveEnemyAttack } from "./combat";
 import { isCorrectPath, makePuzzle } from "./math";
@@ -56,6 +56,7 @@ const initialState: GameState = {
   phase: "start",
   floor: 1,
   roomsCleared: 0,
+  monsterRoomsCleared: 0,
   player: initialPlayer,
   enemy: null,
   puzzle: null,
@@ -224,9 +225,10 @@ export function useGame() {
               phase: "door",
               floor: nextFloor,
               roomsCleared: 0,
+              monsterRoomsCleared: 0,
               enemy: null,
               puzzle: null,
-              doors: makeDoorChoices(0),
+              doors: makeDoorChoices(0, 0),
               feedback: {
                 kind: "buy",
                 message: `${bossReward.message} Floor ${nextFloor} opens. +${bossGold} gold.`,
@@ -254,6 +256,7 @@ export function useGame() {
       }
 
       const roomsCleared = current.roomsCleared + 1;
+      const monsterRoomsCleared = current.monsterRoomsCleared + 1;
       const reward = MONSTER_REWARD + healedPlayer.goldBonus;
       const nonce = Date.now();
       window.setTimeout(() => {
@@ -263,9 +266,10 @@ export function useGame() {
             ...scheduled,
             phase: "door",
             roomsCleared,
+            monsterRoomsCleared,
             enemy: null,
             puzzle: null,
-            doors: scheduled.tutorial ? makeTutorialDoors() : makeDoorChoices(roomsCleared),
+            doors: scheduled.tutorial ? makeTutorialDoors() : makeDoorChoices(roomsCleared, monsterRoomsCleared),
             tutorial: scheduled.tutorial ? "door" : null,
             feedback: {
               kind: "buy",
@@ -297,7 +301,7 @@ export function useGame() {
     ensureAudio(getDoorMusicTheme(door.kind));
     if (door.kind === "shop") {
       setState((current) => ({
-        ...current,
+        ...completeNonCombatRoom(current),
         phase: "shop",
         paused: false,
         doors: [],
@@ -310,7 +314,7 @@ export function useGame() {
 
     if (door.kind === "bargain") {
       setState((current) => ({
-        ...current,
+        ...completeNonCombatRoom(current),
         phase: "bargain",
         paused: false,
         doors: [],
@@ -322,22 +326,25 @@ export function useGame() {
     }
 
     if (door.kind === "mystery") {
-      setState((current) => ({
-        ...current,
-        doors: [],
-        player: {
-          ...current.player,
-          hp: Math.min(current.player.maxHp, current.player.hp + MYSTERY_HEAL),
-          gold: current.player.gold + MYSTERY_GOLD,
-        },
-        feedback: {
-          kind: "buy",
-          message: `Mystery room: +${MYSTERY_HEAL} HP and +${MYSTERY_GOLD} gold.`,
-          nonce: Date.now(),
-          rewards: [{ kind: "gold", amount: MYSTERY_GOLD }],
-        },
-      }));
-      window.setTimeout(() => setState((current) => beginFightEntry({ ...current, feedback: null }, false, makeRunPuzzle)), 1_800);
+      setState((current) => {
+        const next = completeNonCombatRoom(current);
+        return {
+          ...next,
+          doors: [],
+          player: {
+            ...next.player,
+            hp: Math.min(next.player.maxHp, next.player.hp + MYSTERY_HEAL),
+            gold: next.player.gold + MYSTERY_GOLD,
+          },
+          feedback: {
+            kind: "buy",
+            message: `Mystery room: +${MYSTERY_HEAL} HP and +${MYSTERY_GOLD} gold.`,
+            nonce: Date.now(),
+            rewards: [{ kind: "gold", amount: MYSTERY_GOLD }],
+          },
+        };
+      });
+      window.setTimeout(() => setState((current) => startNextFight({ ...current, feedback: null }, makeRunPuzzle)), 1_800);
       return;
     }
 
@@ -348,7 +355,7 @@ export function useGame() {
     ensureAudio("bargain");
     setState((current) => {
       const { player, message, item } = applyBargain(current.player, id);
-      const shouldBoss = current.roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS;
+      const shouldBoss = current.roomsCleared >= ROOMS_BEFORE_BOSS;
       return beginFightEntry(
         {
           ...current,
@@ -511,9 +518,10 @@ export function useGame() {
               phase: "door",
               floor: nextFloor,
               roomsCleared: 0,
+              monsterRoomsCleared: 0,
               enemy: { ...current.enemy, hp: 0 },
               puzzle: null,
-              doors: makeDoorChoices(0),
+              doors: makeDoorChoices(0, 0),
               player: bossReward.player,
               feedback: {
                 kind: "buy",
@@ -528,14 +536,16 @@ export function useGame() {
           }
 
           const roomsCleared = current.roomsCleared + 1;
+          const monsterRoomsCleared = current.monsterRoomsCleared + 1;
           const reward = MONSTER_REWARD + player.goldBonus;
           return {
             ...current,
             phase: "door",
             roomsCleared,
+            monsterRoomsCleared,
             enemy: { ...current.enemy, hp: 0 },
             puzzle: null,
-            doors: makeDoorChoices(roomsCleared),
+            doors: makeDoorChoices(roomsCleared, monsterRoomsCleared),
             player: { ...player, gold: player.gold + reward },
             feedback: {
               kind: "buy",
@@ -591,6 +601,13 @@ function makeNewRunState(withTutorial: boolean): GameState {
   };
 }
 
+function completeNonCombatRoom(current: GameState): GameState {
+  return {
+    ...current,
+    roomsCleared: current.roomsCleared + 1,
+  };
+}
+
 function beginFightEntry(
   current: GameState,
   isBoss: boolean,
@@ -620,7 +637,7 @@ function startNextFight(
   current: GameState,
   makeRunPuzzle: (size: number, player: PlayerState, floor: number, isBoss?: boolean) => ReturnType<typeof makePuzzle>,
 ): GameState {
-  const shouldBoss = current.roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS;
+  const shouldBoss = current.roomsCleared >= ROOMS_BEFORE_BOSS;
   return beginFightEntry(current, shouldBoss, makeRunPuzzle);
 }
 

@@ -29,7 +29,7 @@ const bossTemplates: BossDefinition[] = [
     name: "Count Calculus",
     hp: 12,
     damage: 4,
-    intro: "Three rooms brought you here, little solver. My grid is larger, and my sums bite harder.",
+    intro: "Five doors brought you here, little solver. My grid is larger, and my sums bite harder.",
     item: "lifesteal",
   },
   {

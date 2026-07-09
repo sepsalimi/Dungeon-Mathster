@@ -2,7 +2,7 @@
 // and progression code so the numbers here match the shipped game exactly.
 // Player skill is modeled as puzzle solve time plus accuracy per attempt.
 import { applyLifesteal, getEnemyAttackInterval, resolveEnemyAttack } from "./combat";
-import { makeDoorChoices, makeEnemy, MONSTER_REWARD, MONSTER_ROOMS_BEFORE_BOSS, MYSTERY_GOLD, MYSTERY_HEAL } from "./content";
+import { makeDoorChoices, makeEnemy, MONSTER_REWARD, MYSTERY_GOLD, MYSTERY_HEAL, ROOMS_BEFORE_BOSS } from "./content";
 import { FINAL_FLOOR, applyBossItem, getBossReward, getItemCount, STARTING_MAX_HP, STARTING_SWORD_DAMAGE } from "./progression";
 import { applyBargain, applyShopUpgrade, getUpgradeCost, shopUpgrades } from "./shop";
 import type { EnemyState, PlayerState, ShopUpgradeId } from "./types";
@@ -155,11 +155,12 @@ export function simulateRun(profile: SkillProfile): RunResult {
   let player = makeSimPlayer();
   let floor = 1;
   let roomsCleared = 0;
+  let monsterRoomsCleared = 0;
   const floor1MonsterSolves: number[] = [];
   const floor1FightSeconds: number[] = [];
 
   while (true) {
-    const isBossRoom = roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS;
+    const isBossRoom = roomsCleared >= ROOMS_BEFORE_BOSS;
     const enemy = makeEnemy(isBossRoom, floor);
     const result = simulateFight(player, enemy, floor, profile);
     player = result.player;
@@ -180,23 +181,32 @@ export function simulateRun(profile: SkillProfile): RunResult {
       player = applyBossItem({ ...player, gold: player.gold + getBossReward(floor) }, floor).player;
       floor += 1;
       roomsCleared = 0;
+      monsterRoomsCleared = 0;
       continue;
     }
 
     roomsCleared += 1;
+    monsterRoomsCleared += 1;
     player = { ...player, gold: player.gold + MONSTER_REWARD + player.goldBonus };
 
-    if (roomsCleared < MONSTER_ROOMS_BEFORE_BOSS) {
-      const usefulDoor = makeDoorChoices(roomsCleared).find((door) => door.kind !== "monster");
-      if (usefulDoor?.kind === "shop") player = visitShop(player, floor);
+    if (roomsCleared < ROOMS_BEFORE_BOSS) {
+      const usefulDoor = makeDoorChoices(roomsCleared, monsterRoomsCleared).find((door) => door.kind !== "monster");
+      if (usefulDoor?.kind === "shop") {
+        player = visitShop(player, floor);
+        roomsCleared += 1;
+      }
       if (usefulDoor?.kind === "mystery") {
         player = {
           ...player,
           hp: Math.min(player.maxHp, player.hp + MYSTERY_HEAL),
           gold: player.gold + MYSTERY_GOLD,
         };
+        roomsCleared += 1;
       }
-      if (usefulDoor?.kind === "bargain" && profile.takesBargains) player = visitBargain(player);
+      if (usefulDoor?.kind === "bargain" && profile.takesBargains) {
+        player = visitBargain(player);
+        roomsCleared += 1;
+      }
     }
   }
 }

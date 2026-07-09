@@ -9,6 +9,7 @@ const state: GameState = {
   phase: "shop",
   floor: 1,
   roomsCleared: 1,
+  monsterRoomsCleared: 1,
   player: {
     hp: 100,
     maxHp: 100,
