@@ -23,7 +23,7 @@ import { applyLifesteal, getEnemyAttackInterval, resolveEnemyAttack } from "./co
 import { isCorrectPath, makePuzzle } from "./math";
 import { getTutorialOnNewGame } from "./settings";
 import { withStrugglePause } from "./struggle";
-import { makeTutorialDoors, markTutorialSeen } from "./tutorial";
+import { makeTutorialDoors, makeTutorialEnemy, markTutorialSeen } from "./tutorial";
 import {
   FINAL_FLOOR,
   STARTING_MAX_HP,
@@ -308,6 +308,7 @@ export function useGame() {
         puzzle: null,
         doors: [],
         player: { ...healedPlayer, gold: healedPlayer.gold + reward },
+        tutorial: current.tutorial ? "gold" : null,
         feedback: {
           kind: "hit",
           message: `Monster defeated. +${reward} gold.`,
@@ -466,7 +467,7 @@ export function useGame() {
           player,
           enemy: { ...current.enemy, hp: enemyHp },
           tutorialEnemyHitDone: true,
-          tutorial: null,
+          tutorial: "killEnemy",
           feedback: { kind: "enemy", message: "", nonce: Date.now(), amount: damage },
         };
       });
@@ -642,11 +643,13 @@ function startSpecificFight(
   isBoss: boolean,
   makeRunPuzzle: (size: number, player: PlayerState, floor: number, isBoss?: boolean) => ReturnType<typeof makePuzzle>,
 ): GameState {
+  const enemy = makeEnemy(isBoss, current.floor);
+
   return {
     ...current,
     phase: isBoss ? "bossIntro" : "combat",
     paused: false,
-    enemy: makeEnemy(isBoss, current.floor),
+    enemy: current.tutorial && !isBoss ? makeTutorialEnemy(enemy) : enemy,
     puzzle: makeRunPuzzle(isBoss ? 4 : 3, current.player, current.floor, isBoss),
     doors: [],
     frozenUntil: 0,

@@ -52,7 +52,7 @@ export default function App() {
       {(game.state.phase === "victory" || game.state.phase === "defeat") && (
         <RunEndView state={game.state} onRestart={game.startRun} />
       )}
-      {game.state.tutorial && game.state.phase === "combat" && !game.state.paused && (
+      {game.state.tutorial && !game.state.paused && ["combat", "door", "shop"].includes(game.state.phase) && (
         <TutorialOverlay step={game.state.tutorial} onSkip={game.skipTutorial} />
       )}
       {game.state.paused && game.state.tutorialOffer && (
