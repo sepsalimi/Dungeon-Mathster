@@ -9,8 +9,8 @@ const combatState: GameState = {
   floor: 1,
   roomsCleared: 0,
   player: {
-    hp: 118,
-    maxHp: 120,
+    hp: 98,
+    maxHp: 100,
     temporaryHp: 0,
     gold: 0,
     goldBonus: 0,
@@ -59,7 +59,7 @@ const combatState: GameState = {
 };
 
 describe("CombatView tutorial cues", () => {
-  it("keeps the swipe guide and enemy health highlight visible while finishing the tutorial enemy", () => {
+  it("keeps the swipe guide and health highlights visible while finishing the tutorial enemy", () => {
     const html = renderToStaticMarkup(
       <CombatView
         state={combatState}
@@ -72,5 +72,6 @@ describe("CombatView tutorial cues", () => {
 
     expect(html).toContain("swipe-guide");
     expect(html).toContain("enemy-plate--tutorial");
+    expect(html).toContain("player-health-card--tutorial");
   });
 });

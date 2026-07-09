@@ -5,8 +5,8 @@ import type { PlayerState } from "./types";
 
 function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
-    hp: 120,
-    maxHp: 120,
+    hp: 100,
+    maxHp: 100,
     temporaryHp: 0,
     gold: 0,
     goldBonus: 0,
@@ -29,7 +29,7 @@ describe("bargain options", () => {
 
     expect(player.oracleLensChance).toBe(0.25);
     expect(player.negativesUnlocked).toBe(true);
-    expect(player.maxHp).toBe(120);
+    expect(player.maxHp).toBe(100);
     expect(message).toContain("25%");
     expect(message).toContain("Negative numbers enter the grid.");
     expect(item).toBe("oracleLens");
@@ -40,8 +40,8 @@ describe("bargain options", () => {
 
     expect(player.permutationBonus).toBe(1);
     expect(player.negativesUnlocked).toBe(true);
-    expect(player.maxHp).toBe(120);
-    expect(player.hp).toBe(120);
+    expect(player.maxHp).toBe(100);
+    expect(player.hp).toBe(100);
     expect(message).toContain("Monster answers grow longer.");
     expect(item).toBe("negativeHeart");
   });

@@ -10,8 +10,8 @@ const state: GameState = {
   floor: 1,
   roomsCleared: 1,
   player: {
-    hp: 120,
-    maxHp: 120,
+    hp: 100,
+    maxHp: 100,
     temporaryHp: 0,
     gold: 60,
     goldBonus: 0,
@@ -51,7 +51,7 @@ describe("non-combat rooms", () => {
       />,
     );
 
-    expect(html).toContain("120/120");
+    expect(html).toContain("100/100");
     expect(html).toContain("Damage Reduction Armor");
     expect(html).toContain("Armor");
     expect(html).toContain("Barbed Armor");
@@ -69,7 +69,7 @@ describe("non-combat rooms", () => {
       />,
     );
 
-    expect(html).toContain("120/120");
+    expect(html).toContain("100/100");
     expect(html).toContain("25% chance the first number in an answer glows.");
     expect(html).toContain("Monster answers need 1 extra number when the grid can fit it.");
     expect(html).toContain("Negative numbers enter the grid.");

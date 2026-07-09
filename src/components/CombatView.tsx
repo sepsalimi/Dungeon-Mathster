@@ -18,7 +18,7 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
   const frozen = state.frozenUntil > Date.now();
   const hurtNonce = state.feedback?.kind === "enemy" ? state.feedback.nonce : null;
   const highlightEnemyHealth = state.tutorial === "finish" || state.tutorial === "killEnemy";
-  const highlightPlayerHealth = state.tutorial === "enemyHit";
+  const highlightPlayerHealth = state.tutorial === "enemyHit" || state.tutorial === "killEnemy";
   const guidePath = state.tutorial === "swipe" || state.tutorial === "killEnemy" ? state.puzzle?.answerPath : null;
   const startHintId = useMemo(() => {
     if (!state.puzzle || state.player.oracleLensChance <= 0) return null;

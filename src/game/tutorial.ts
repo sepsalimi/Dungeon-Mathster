@@ -8,11 +8,11 @@ export const tutorialCopy: Record<TutorialStep, { title: string; message: string
   },
   finish: {
     title: "Step 2 of 7",
-    message: "Good hit. The enemy health bar shows how close the monster is to falling.",
+    message: "Good hit. The monster's health bar shows how close it is to falling.",
   },
   enemyHit: {
     title: "Step 3 of 7",
-    message: "Enemies strike back. Watch your health bar when this one attacks.",
+    message: "Enemies attack the player. Watch your Player HP bar when this one lunges.",
   },
   killEnemy: {
     title: "Step 4 of 7",
@@ -20,7 +20,7 @@ export const tutorialCopy: Record<TutorialStep, { title: string; message: string
   },
   gold: {
     title: "Step 5 of 7",
-    message: "Gold drops after a kill. Watch it fly into the gold icon at the top.",
+    message: "Gold drops after a kill. Watch the coins fly into the gold counter.",
   },
   door: {
     title: "Step 6 of 7",

@@ -71,6 +71,7 @@ const initialState: GameState = {
 };
 
 const REWARD_TRANSITION_DELAY = 1_550;
+const TUTORIAL_REWARD_TRANSITION_DELAY = 4_400;
 export function useGame() {
   const [state, setState] = useState<GameState>(initialState);
   const [soundLevel, setSoundLevel] = useState<SoundLevel>("loud");
@@ -165,6 +166,12 @@ export function useGame() {
     ensureAudio(musicTheme.current);
     setState((current) => {
       if (current.paused || current.phase !== "combat" || !current.enemy || !current.puzzle) return current;
+      if (current.tutorial === "finish" || current.tutorial === "enemyHit") {
+        return {
+          ...current,
+          feedback: { kind: "blocked", message: "Wait for the enemy to strike your health bar.", nonce: Date.now() },
+        };
+      }
 
       const correct = isCorrectPath(path, current.puzzle.tiles, current.puzzle.target);
       const gridSize = current.enemy.isBoss ? 4 : 3;
@@ -267,7 +274,7 @@ export function useGame() {
             },
           };
         });
-      }, REWARD_TRANSITION_DELAY);
+      }, current.tutorial ? TUTORIAL_REWARD_TRANSITION_DELAY : REWARD_TRANSITION_DELAY);
       return {
         ...current,
         enemy: null,
