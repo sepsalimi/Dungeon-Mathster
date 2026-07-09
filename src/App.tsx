@@ -32,7 +32,12 @@ export default function App() {
         <BargainView state={game.state} onTakeBargain={game.takeBargain} {...hudControls} />
       )}
       {game.state.phase === "bossIntro" && (
-        <BossIntro state={game.state} onContinue={game.startBossFight} {...hudControls} />
+        <BossIntro
+          state={game.state}
+          onDialogTick={game.playBossDialogTick}
+          onContinue={game.startBossFight}
+          {...hudControls}
+        />
       )}
       {(game.state.phase === "victory" || game.state.phase === "defeat") && (
         <RunEndView state={game.state} onRestart={game.startRun} />

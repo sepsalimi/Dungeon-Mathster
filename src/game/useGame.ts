@@ -136,6 +136,15 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     });
   }, []);
 
+  const playBossDialogTick = useCallback((index: number) => {
+    const context = audioContext.current;
+    const volumeMultiplier = getVolumeMultiplier(soundLevelRef.current);
+    if (!context || context.state !== "running" || volumeMultiplier === 0) return;
+
+    const pitch = index % 2 === 0 ? 420 : 520;
+    playTone(context, pitch, 0.003, 0.035, "square", 0.028 * volumeMultiplier);
+  }, []);
+
   const startBossFight = useCallback(() => {
     ensureAudio("boss");
     setState((current) => ({
@@ -455,6 +464,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     buyUpgrade,
     leaveShop,
     startBossFight,
+    playBossDialogTick,
     resumeGame,
     pauseGame,
     cycleSoundLevel,
