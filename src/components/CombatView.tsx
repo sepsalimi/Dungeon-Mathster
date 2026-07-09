@@ -30,7 +30,7 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
           player={state.player}
           puzzle={state.puzzle}
           startHintId={startHintId}
-          guidePath={state.tutorial === "swipe" ? state.puzzle.answerPath : null}
+          guidePath={state.tutorial === "swipe" || state.tutorial === "finish" ? state.puzzle.answerPath : null}
           onSubmitPath={onSubmitPath}
         />
       )}
