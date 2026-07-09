@@ -24,6 +24,7 @@ export function MathGrid({ player, puzzle, startHintId, onSubmitPath }: MathGrid
   const lastPoint = useRef<DragPoint | null>(null);
   const tileMap = useMemo(() => new Map(puzzle.tiles.map((tile) => [tile.id, tile])), [puzzle.tiles]);
   const hpPercent = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
+  const displayedHp = player.temporaryHp > 0 ? `${player.hp}+${player.temporaryHp}` : String(player.hp);
 
   useEffect(() => {
     resetSwipe();
@@ -156,14 +157,14 @@ export function MathGrid({ player, puzzle, startHintId, onSubmitPath }: MathGrid
         <div className="player-health-label">
           <span>Player HP</span>
           <strong>
-            {player.hp}/{player.maxHp}
+            {displayedHp}/{player.maxHp}
           </strong>
         </div>
         <div className="player-health-track">
           <div className="player-health-fill" style={{ width: `${hpPercent}%` }} />
         </div>
         {player.lifesteal > 0 && (
-          <div className="relic-badge" aria-label={`Lifesteal heals ${player.lifesteal} HP per hit`}>
+          <div className="item-badge" aria-label={`Lifesteal heals ${player.lifesteal} HP per hit`}>
             Lifesteal +{player.lifesteal}
           </div>
         )}

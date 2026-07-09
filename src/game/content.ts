@@ -1,5 +1,5 @@
 import type { BargainOption, DoorChoice, EnemyState, ShopUpgrade } from "./types";
-import { bossDefinitions } from "./progression";
+import { getBossDefinition } from "./progression";
 
 export const MONSTER_REWARD = 18;
 export const MONSTER_ROOMS_BEFORE_BOSS = 3;
@@ -18,8 +18,9 @@ const monsterNames = [
 export const shopUpgrades: ShopUpgrade[] = [
   { id: "heal", name: "Heal HP", description: "Restore 35 HP now.", cost: 15 },
   { id: "maxHp", name: "Increase Max HP", description: "Gain 20 max HP and heal 20.", cost: 30 },
-  { id: "armor", name: "Armor", description: "Reduce monster attacks by 1.", cost: 25 },
-  { id: "freeze", name: "Freeze", description: "Stop attacks for 10 seconds next room.", cost: 20 },
+  { id: "damageReductionArmor", name: "Damage Reduction Armor", description: "Reduce monster attacks by 1.", cost: 30 },
+  { id: "temporaryArmor", name: "Armor", description: "Gain 25 temporary HP.", cost: 20 },
+  { id: "barbedArmor", name: "Barbed Armor", description: "Deal 1 damage when enemies hit you.", cost: 30 },
   { id: "sword", name: "Sword Upgrade", description: "Deal 1 extra damage per correct answer.", cost: 35 },
 ];
 
@@ -27,7 +28,7 @@ export const bargainOptions: BargainOption[] = [
   {
     id: "oracleLens",
     name: "Oracle Lens",
-    upside: "The first number in every answer glows.",
+    upside: "Sometimes the first number in an answer glows.",
     downside: "Lose 20 max HP permanently.",
   },
   {
@@ -52,11 +53,11 @@ export const bargainOptions: BargainOption[] = [
 
 export function makeEnemy(isBoss: boolean, floor: number): EnemyState {
   if (isBoss) {
-    const boss = bossDefinitions[floor];
+    const boss = getBossDefinition(floor);
     return { name: boss.name, hp: boss.hp, maxHp: boss.hp, damage: boss.damage, isBoss: true };
   }
 
-  const hp = 2 + floor;
+  const hp = 2 + floor * 3 + Math.floor(floor ** 1.45);
   const damage = 4 + floor * 2;
 
   return {

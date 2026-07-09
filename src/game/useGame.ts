@@ -9,10 +9,9 @@ import {
 } from "./content";
 import { isCorrectPath, makePuzzle } from "./math";
 import {
-  MAX_FLOOR,
   STARTING_MAX_HP,
-  addRelic,
-  applyBossRelic,
+  addItem,
+  applyBossItem,
   getBossReward,
   getFloorOperators,
   getRoomPathLength,
@@ -22,16 +21,17 @@ import type { BargainId, DoorChoice, FeedbackState, GameState, PlayerState, Shop
 const initialPlayer: PlayerState = {
   hp: 120,
   maxHp: STARTING_MAX_HP,
+  temporaryHp: 0,
   gold: 0,
   goldBonus: 0,
-  armor: 0,
+  damageReductionArmor: 0,
+  barbedArmor: 0,
   swordDamage: 1,
-  freezeNextRoom: false,
-  revealStartTile: false,
+  oracleLensChance: 0,
   negativesUnlocked: false,
   extraDamageTaken: 0,
   lifesteal: 0,
-  relics: [],
+  items: {},
 };
 
 const initialState: GameState = {
@@ -174,40 +174,21 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
 
       if (current.enemy.isBoss) {
         const bossGold = getBossReward(current.floor);
-        const bossReward = applyBossRelic({ ...healedPlayer, gold: healedPlayer.gold + bossGold }, current.floor);
-
-        if (current.floor < MAX_FLOOR) {
-          const nextFloor = current.floor + 1;
-          return {
-            ...current,
-            phase: "door",
-            floor: nextFloor,
-            roomsCleared: 0,
-            enemy: { ...current.enemy, hp: 0 },
-            puzzle: null,
-            doors: makeDoorChoices(0),
-            player: bossReward.player,
-            feedback: {
-              kind: "hit",
-              message: `${bossReward.message} Floor ${nextFloor} opens. +${bossGold} gold.`,
-              nonce: Date.now(),
-              amount: current.player.swordDamage,
-            },
-          };
-        }
-
-        stopMusic(music);
+        const bossReward = applyBossItem({ ...healedPlayer, gold: healedPlayer.gold + bossGold }, current.floor);
+        const nextFloor = current.floor + 1;
         return {
           ...current,
-          phase: "victory",
+          phase: "door",
+          floor: nextFloor,
+          roomsCleared: 0,
           enemy: { ...current.enemy, hp: 0 },
           puzzle: null,
+          doors: makeDoorChoices(0),
           player: bossReward.player,
           feedback: {
-            kind: "hit",
-            message: `The Bedmas King falls. +${bossGold} gold.`,
+            kind: "buy",
+            message: `${bossReward.message} Floor ${nextFloor} opens. +${bossGold} gold.`,
             nonce: Date.now(),
-            amount: current.player.swordDamage,
           },
         };
       }
@@ -283,28 +264,28 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       let message = bargainOptions.find((option) => option.id === id)?.name ?? "Bargain taken";
 
       if (id === "oracleLens") {
-        player = addRelic(player, "oracleLens");
-        player.revealStartTile = true;
+        player = addItem(player, "oracleLens");
+        player.oracleLensChance = Math.min(0.8, player.oracleLensChance + 0.22);
         player.maxHp = Math.max(1, player.maxHp - 20);
         player.hp = Math.min(player.hp, player.maxHp);
-        message = "Oracle Lens taken. First answer tile now glows.";
+        message = "Oracle Lens taken. Some answer starts will glow.";
       }
       if (id === "negativeHeart") {
-        player = addRelic(player, "negativeHeart");
+        player = addItem(player, "negativeHeart");
         player.maxHp += 30;
         player.hp = Math.min(player.maxHp, player.hp + 30);
         player.negativesUnlocked = true;
         message = "Negative Heart taken. More HP, stranger numbers.";
       }
       if (id === "glassBlade") {
-        player = addRelic(player, "glassBlade");
+        player = addItem(player, "glassBlade");
         player.swordDamage = Math.max(1, player.swordDamage * 2);
         player.maxHp = Math.max(1, Math.floor(player.maxHp / 2));
         player.hp = Math.min(player.hp, player.maxHp);
         message = "Glass Blade taken. Damage doubled, health halved.";
       }
       if (id === "coinHex") {
-        player = addRelic(player, "coinHex");
+        player = addItem(player, "coinHex");
         if (Math.random() < 0.5) {
           player.swordDamage += 1;
           message = "Coin Hex: heads. Sword damage increased.";
@@ -331,12 +312,26 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       const player = { ...current.player, gold: current.player.gold - upgrade.cost };
       if (id === "heal") player.hp = Math.min(player.maxHp, player.hp + 35);
       if (id === "maxHp") {
+        Object.assign(player, addItem(player, "maxHp"));
         player.maxHp += 20;
         player.hp = Math.min(player.maxHp, player.hp + 20);
       }
-      if (id === "armor") player.armor += 1;
-      if (id === "freeze") player.freezeNextRoom = true;
-      if (id === "sword") player.swordDamage += 1;
+      if (id === "damageReductionArmor") {
+        Object.assign(player, addItem(player, "damageReductionArmor"));
+        player.damageReductionArmor += 1;
+      }
+      if (id === "temporaryArmor") {
+        Object.assign(player, addItem(player, "temporaryArmor"));
+        player.temporaryHp += 25;
+      }
+      if (id === "barbedArmor") {
+        Object.assign(player, addItem(player, "barbedArmor"));
+        player.barbedArmor += 1;
+      }
+      if (id === "sword") {
+        Object.assign(player, addItem(player, "sword"));
+        player.swordDamage += 1;
+      }
 
       return { ...current, player, feedback: { kind: "buy", message: `${upgrade.name} purchased.`, nonce: Date.now() } };
     });
@@ -378,18 +373,59 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     const timer = window.setInterval(() => {
       setState((current) => {
         if (current.paused || current.phase !== "combat" || !current.enemy) return current;
-        if (current.frozenUntil > Date.now()) {
-          return { ...current, feedback: { kind: "blocked", message: "Freeze holds the monster still.", nonce: Date.now() } };
-        }
-
-        const damage = Math.max(1, current.enemy.damage - current.player.armor + current.player.extraDamageTaken);
-        const hp = Math.max(0, current.player.hp - damage);
+        const damage = Math.max(1, current.enemy.damage - current.player.damageReductionArmor + current.player.extraDamageTaken);
+        const temporaryHp = Math.max(0, current.player.temporaryHp - damage);
+        const damageToHp = Math.max(0, damage - current.player.temporaryHp);
+        const hp = Math.max(0, current.player.hp - damageToHp);
+        const enemyHp = Math.max(0, current.enemy.hp - current.player.barbedArmor);
+        const player = { ...current.player, hp, temporaryHp };
         if (hp <= 0) stopMusic(music);
+
+        if (hp > 0 && enemyHp <= 0 && current.player.barbedArmor > 0) {
+          if (current.enemy.isBoss) {
+            const bossGold = getBossReward(current.floor);
+            const bossReward = applyBossItem({ ...player, gold: player.gold + bossGold }, current.floor);
+            const nextFloor = current.floor + 1;
+            return {
+              ...current,
+              phase: "door",
+              floor: nextFloor,
+              roomsCleared: 0,
+              enemy: { ...current.enemy, hp: 0 },
+              puzzle: null,
+              doors: makeDoorChoices(0),
+              player: bossReward.player,
+              feedback: {
+                kind: "buy",
+                message: `Barbed Armor defeated the boss. ${bossReward.message} Floor ${nextFloor} opens.`,
+                nonce: Date.now(),
+              },
+            };
+          }
+
+          const roomsCleared = current.roomsCleared + 1;
+          const reward = MONSTER_REWARD + player.goldBonus;
+          return {
+            ...current,
+            phase: "door",
+            roomsCleared,
+            enemy: { ...current.enemy, hp: 0 },
+            puzzle: null,
+            doors: makeDoorChoices(roomsCleared),
+            player: { ...player, gold: player.gold + reward },
+            feedback: {
+              kind: "buy",
+              message: `Barbed Armor defeated the monster. +${reward} gold.`,
+              nonce: Date.now(),
+            },
+          };
+        }
 
         return {
           ...current,
           phase: hp <= 0 ? "defeat" : current.phase,
-          player: { ...current.player, hp },
+          enemy: { ...current.enemy, hp: enemyHp },
+          player,
           feedback: { kind: "enemy", message: "", nonce: Date.now(), amount: damage },
         };
       });
@@ -427,7 +463,6 @@ function startSpecificFight(
   isBoss: boolean,
   makeRunPuzzle: (size: number, player: PlayerState, floor: number, isBoss?: boolean) => ReturnType<typeof makePuzzle>,
 ): GameState {
-  const frozenUntil = current.player.freezeNextRoom ? Date.now() + 10_000 : 0;
   return {
     ...current,
     phase: isBoss ? "bossIntro" : "combat",
@@ -435,9 +470,8 @@ function startSpecificFight(
     enemy: makeEnemy(isBoss, current.floor),
     puzzle: makeRunPuzzle(isBoss ? 4 : 3, current.player, current.floor, isBoss),
     doors: [],
-    frozenUntil,
-    player: { ...current.player, freezeNextRoom: false },
-    feedback: isBoss ? { kind: "blocked", message: "The boss waits behind the iron sum gate.", nonce: Date.now() } : current.feedback,
+    frozenUntil: 0,
+    feedback: isBoss ? { kind: "blocked", message: "The boss waits behind the iron sum gate.", nonce: Date.now() } : null,
   };
 }
 

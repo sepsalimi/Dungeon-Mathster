@@ -1,5 +1,5 @@
 import type { GameState, SoundLevel } from "../game/types";
-import { MAX_FLOOR, getRelicBadges } from "../game/progression";
+import { getItemStacks } from "../game/progression";
 
 interface HudProps {
   state: GameState;
@@ -15,18 +15,29 @@ const soundLabels: Record<SoundLevel, string> = {
 };
 
 export function Hud({ state, soundLevel, onPause, onCycleSoundLevel }: HudProps) {
-  const relics = getRelicBadges(state.player);
+  const items = getItemStacks(state.player);
 
   return (
     <header className="hud">
-      <div className="run-panel" aria-label={`Floor ${state.floor} of ${MAX_FLOOR}, ${state.player.gold} gold`}>
+      <div className="run-panel" aria-label={`Floor ${state.floor}, ${state.player.gold} gold`}>
         <div className="run-panel__topline">
-          <span>Floor {state.floor}/{MAX_FLOOR}</span>
-          <strong>{state.player.gold}g</strong>
+          <span>Floor {state.floor}</span>
+          <strong className="gold-chip">
+            <span className="coin-icon" aria-hidden="true">G</span>
+            {state.player.gold}
+          </strong>
         </div>
-        <div className="relic-list" aria-label={relics.length ? `Relics: ${relics.join(", ")}` : "Relics: none"}>
-          <small>Relics</small>
-          <span>{relics.length ? relics.join(" | ") : "None"}</span>
+        <div className="item-list" aria-label={items.length ? `Items: ${items.map((item) => `${item.label} ${item.count}`).join(", ")}` : "Items: none"}>
+          <small>Items</small>
+          <div className="item-icons">
+            {items.length === 0 && <span className="item-empty">None</span>}
+            {items.map((item) => (
+              <span key={item.id} className="item-stack" title={`${item.label} x${item.count}`}>
+                <span className={`item-icon item-icon--${item.icon}`} aria-hidden="true" />
+                <b>{item.count}</b>
+              </span>
+            ))}
+          </div>
         </div>
       </div>
       <button className="hud-button" type="button" onClick={onCycleSoundLevel} aria-label={soundLabels[soundLevel]}>

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 import { MathGrid } from "./MathGrid";
@@ -15,7 +16,10 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
   const lowHealth = state.player.hp <= state.player.maxHp * 0.3;
   const frozen = state.frozenUntil > Date.now();
   const hurtNonce = state.feedback?.kind === "enemy" ? state.feedback.nonce : null;
-  const startHintId = state.player.revealStartTile ? state.puzzle?.answerPath[0] : null;
+  const startHintId = useMemo(() => {
+    if (!state.puzzle || state.player.oracleLensChance <= 0) return null;
+    return Math.random() < state.player.oracleLensChance ? state.puzzle.answerPath[0] : null;
+  }, [state.puzzle?.target, state.puzzle?.answerPath[0], state.player.oracleLensChance]);
 
   return (
     <div className={["game-screen", lowHealth ? "game-screen--danger" : "", hurtNonce ? "game-screen--hurt" : ""].filter(Boolean).join(" ")}>

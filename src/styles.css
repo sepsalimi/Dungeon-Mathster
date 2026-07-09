@@ -1403,7 +1403,7 @@ p {
 }
 
 .run-panel__topline,
-.relic-list {
+.item-list {
   min-width: 0;
   display: flex;
   align-items: center;
@@ -1412,7 +1412,7 @@ p {
 }
 
 .run-panel__topline span,
-.relic-list small {
+.item-list small {
   color: #f0c56f;
   font-size: 0.58rem;
   font-weight: 900;
@@ -1427,17 +1427,165 @@ p {
   line-height: 1;
 }
 
-.relic-list span {
+.gold-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  color: #fff0a8;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.gold-chip .coin-icon {
+  width: 1.08rem;
+  height: 1.08rem;
+  font-size: 0.52rem;
+}
+
+.item-icons {
   min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.22rem;
   overflow: hidden;
-  color: #bff9ff;
-  font-size: 0.66rem;
-  font-weight: 800;
-  line-height: 1.05;
-  text-align: right;
-  text-overflow: ellipsis;
+}
+
+.item-empty {
+  color: #8f8490;
+  font-size: 0.62rem;
+  font-weight: 900;
   text-transform: uppercase;
-  white-space: nowrap;
+}
+
+.item-stack {
+  position: relative;
+  width: 1.34rem;
+  height: 1.34rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: #15121d;
+  border: 1px solid rgba(245, 239, 224, 0.18);
+  box-shadow: 0 2px 0 #050407;
+}
+
+.item-stack b {
+  position: absolute;
+  right: -0.22rem;
+  bottom: -0.24rem;
+  min-width: 0.78rem;
+  height: 0.78rem;
+  display: grid;
+  place-items: center;
+  color: #211923;
+  background: #f0d88d;
+  border: 1px solid #6d4a2c;
+  border-radius: 50%;
+  font-size: 0.5rem;
+  line-height: 1;
+}
+
+.item-icon {
+  position: relative;
+  width: 0.78rem;
+  height: 0.78rem;
+  display: block;
+}
+
+.item-icon::before,
+.item-icon::after {
+  content: "";
+  position: absolute;
+  background: #bff9ff;
+}
+
+.item-icon--shield::before {
+  inset: 0;
+  clip-path: polygon(50% 0, 100% 18%, 88% 76%, 50% 100%, 12% 76%, 0 18%);
+}
+
+.item-icon--helm::before {
+  inset: 0.08rem 0.02rem 0.18rem;
+  border-radius: 50% 50% 18% 18%;
+}
+
+.item-icon--barb::before {
+  inset: 0;
+  clip-path: polygon(50% 0, 62% 34%, 100% 38%, 68% 58%, 78% 100%, 50% 72%, 22% 100%, 32% 58%, 0 38%, 38% 34%);
+}
+
+.item-icon--sword::before {
+  left: 0.34rem;
+  top: 0;
+  width: 0.16rem;
+  height: 0.82rem;
+  transform: rotate(42deg);
+}
+
+.item-icon--sword::after {
+  left: 0.2rem;
+  bottom: 0.1rem;
+  width: 0.5rem;
+  height: 0.14rem;
+  transform: rotate(42deg);
+}
+
+.item-icon--fang::before {
+  inset: 0;
+  clip-path: polygon(18% 0, 58% 0, 42% 100%);
+}
+
+.item-icon--eye::before {
+  inset: 0.18rem 0;
+  border-radius: 50%;
+}
+
+.item-icon--eye::after {
+  left: 0.3rem;
+  top: 0.3rem;
+  width: 0.18rem;
+  height: 0.18rem;
+  background: #15121d;
+  border-radius: 50%;
+}
+
+.item-icon--heart::before {
+  inset: 0;
+  background: #ff8f8f;
+  clip-path: polygon(50% 100%, 8% 52%, 12% 18%, 40% 8%, 50% 24%, 60% 8%, 88% 18%, 92% 52%);
+}
+
+.item-icon--blade::before {
+  inset: 0;
+  background: #d9e2ea;
+  clip-path: polygon(50% 0, 78% 72%, 50% 100%, 22% 72%);
+}
+
+.item-icon--hex::before {
+  inset: 0.05rem;
+  background: #ff8ac1;
+  clip-path: polygon(50% 0, 94% 25%, 94% 75%, 50% 100%, 6% 75%, 6% 25%);
+}
+
+.item-icon--plus::before {
+  left: 0.31rem;
+  top: 0.02rem;
+  width: 0.16rem;
+  height: 0.74rem;
+}
+
+.item-icon--plus::after {
+  left: 0.02rem;
+  top: 0.31rem;
+  width: 0.74rem;
+  height: 0.16rem;
+}
+
+.item-icon--coin::before {
+  inset: 0;
+  background: #f3bd34;
+  border-radius: 50%;
 }
 
 .hud-button {
@@ -1482,7 +1630,7 @@ p {
   display: none;
 }
 
-.relic-badge {
+.item-badge {
   width: fit-content;
   margin-top: 0.38rem;
   padding: 0.18rem 0.42rem;

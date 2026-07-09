@@ -1,5 +1,5 @@
 import type { GameState, SoundLevel } from "../game/types";
-import { bossDefinitions } from "../game/progression";
+import { getBossDefinition } from "../game/progression";
 import { Hud } from "./Hud";
 
 interface BossIntroProps {
@@ -11,7 +11,7 @@ interface BossIntroProps {
 }
 
 export function BossIntro({ state, soundLevel, onPause, onCycleSoundLevel, onContinue }: BossIntroProps) {
-  const boss = bossDefinitions[state.floor];
+  const boss = getBossDefinition(state.floor);
 
   return (
     <div className="game-screen">

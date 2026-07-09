@@ -2,15 +2,18 @@ export type TileType = "number" | "operator";
 export type SoundLevel = "mute" | "low" | "loud";
 export type RoomKind = "monster" | "shop" | "boss" | "mystery" | "bargain";
 export type MathOperator = "+" | "-" | "*";
-export type RelicId =
+export type ItemId =
   | "oracleLens"
   | "negativeHeart"
   | "glassBlade"
   | "coinHex"
-  | "vampireFang"
-  | "ironTheorem"
-  | "timeshard"
-  | "goldenAbacus";
+  | "lifesteal"
+  | "damageReductionArmor"
+  | "temporaryArmor"
+  | "barbedArmor"
+  | "sword"
+  | "maxHp"
+  | "goldBonus";
 export type GamePhase =
   | "start"
   | "combat"
@@ -39,16 +42,17 @@ export interface Puzzle {
 export interface PlayerState {
   hp: number;
   maxHp: number;
+  temporaryHp: number;
   gold: number;
   goldBonus: number;
-  armor: number;
+  damageReductionArmor: number;
+  barbedArmor: number;
   swordDamage: number;
-  freezeNextRoom: boolean;
-  revealStartTile: boolean;
+  oracleLensChance: number;
   negativesUnlocked: boolean;
   extraDamageTaken: number;
   lifesteal: number;
-  relics: RelicId[];
+  items: Partial<Record<ItemId, number>>;
 }
 
 export interface EnemyState {
@@ -87,7 +91,7 @@ export interface GameState {
   paused: boolean;
 }
 
-export type ShopUpgradeId = "heal" | "maxHp" | "armor" | "freeze" | "sword";
+export type ShopUpgradeId = "heal" | "maxHp" | "damageReductionArmor" | "temporaryArmor" | "barbedArmor" | "sword";
 export type BargainId = "oracleLens" | "negativeHeart" | "glassBlade" | "coinHex";
 
 export interface ShopUpgrade {

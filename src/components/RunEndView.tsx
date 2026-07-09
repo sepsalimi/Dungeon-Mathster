@@ -15,7 +15,7 @@ export function RunEndView({ state, onRestart }: RunEndViewProps) {
       <h1>{won ? "BEDMAS MASTERED" : "GAME OVER"}</h1>
       <p>
         {won
-          ? `You cleared Floor ${state.floor} with ${state.player.gold} gold and ${state.player.relics.length} relics.`
+          ? `You reached Floor ${state.floor} with ${state.player.gold} gold.`
           : "The dungeon claimed this run. Start again and cut deeper."}
       </p>
       <button className="primary-action" type="button" onClick={onRestart}>Start New Run</button>
