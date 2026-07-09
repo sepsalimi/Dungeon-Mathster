@@ -1,7 +1,7 @@
 // First-run tutorial: step order, on-screen copy, forced door layout, and
 // the localStorage flag that keeps it from showing again once finished or skipped.
 import { getTutorialOnNewGame, markTutorialSeenIfNeeded } from "./settings";
-import type { DoorChoice, TutorialStep } from "./types";
+import type { DoorChoice, EnemyState, TutorialStep } from "./types";
 
 export const tutorialCopy: Record<TutorialStep, { title: string; message: string }> = {
   swipe: {
@@ -48,4 +48,8 @@ export function makeTutorialDoors(): DoorChoice[] {
     { id: "useful-shop", kind: "shop", label: "Torch Shop", icon: "shop", tone: "safe" },
     { id: "fight-monster", kind: "monster", label: "Monster", icon: "claw", tone: "danger" },
   ];
+}
+
+export function makeTutorialEnemy(enemy: EnemyState): EnemyState {
+  return { ...enemy, hp: 4, maxHp: 4 };
 }
