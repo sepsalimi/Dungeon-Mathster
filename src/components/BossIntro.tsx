@@ -1,18 +1,18 @@
-import type { GameState } from "../game/types";
+import type { GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 
 interface BossIntroProps {
   state: GameState;
-  isMuted: boolean;
+  soundLevel: SoundLevel;
   onPause: () => void;
-  onToggleMute: () => void;
+  onCycleSoundLevel: () => void;
   onContinue: () => void;
 }
 
-export function BossIntro({ state, isMuted, onPause, onToggleMute, onContinue }: BossIntroProps) {
+export function BossIntro({ state, soundLevel, onPause, onCycleSoundLevel, onContinue }: BossIntroProps) {
   return (
     <div className="game-screen">
-      <Hud state={state} isMuted={isMuted} onPause={onPause} onToggleMute={onToggleMute} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <section className="boss-intro">
         <div className="boss-portrait">
           <span className="boss-eye boss-eye--left" />

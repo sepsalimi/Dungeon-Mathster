@@ -1,13 +1,19 @@
-import type { GameState } from "../game/types";
+import type { GameState, SoundLevel } from "../game/types";
 
 interface HudProps {
   state: GameState;
-  isMuted: boolean;
+  soundLevel: SoundLevel;
   onPause: () => void;
-  onToggleMute: () => void;
+  onCycleSoundLevel: () => void;
 }
 
-export function Hud({ state, isMuted, onPause, onToggleMute }: HudProps) {
+const soundLabels: Record<SoundLevel, string> = {
+  mute: "Sound off",
+  low: "Low sound",
+  loud: "Loud sound",
+};
+
+export function Hud({ state, soundLevel, onPause, onCycleSoundLevel }: HudProps) {
   const hpPercent = Math.max(0, Math.round((state.player.hp / state.player.maxHp) * 100));
 
   return (
@@ -35,8 +41,10 @@ export function Hud({ state, isMuted, onPause, onToggleMute }: HudProps) {
           <strong>{state.player.gold}</strong>
         </span>
       </div>
-      <button className="hud-button" type="button" onClick={onToggleMute} aria-label={isMuted ? "Unmute" : "Mute"}>
-        <span className={isMuted ? "mute-icon is-muted" : "mute-icon"} aria-hidden="true" />
+      <button className="hud-button" type="button" onClick={onCycleSoundLevel} aria-label={soundLabels[soundLevel]}>
+        <span className={`sound-icon sound-icon--${soundLevel}`} aria-hidden="true">
+          {soundLevel === "loud" && <i className="sound-icon__wave sound-icon__wave--outer" />}
+        </span>
       </button>
       <button className="hud-button" type="button" onClick={onPause} aria-label="Pause game">
         <span aria-hidden="true">II</span>
@@ -44,4 +52,3 @@ export function Hud({ state, isMuted, onPause, onToggleMute }: HudProps) {
     </header>
   );
 }
-

@@ -1,19 +1,19 @@
 import { bargainOptions } from "../game/content";
-import type { BargainId, GameState } from "../game/types";
+import type { BargainId, GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 
 interface BargainViewProps {
   state: GameState;
-  isMuted: boolean;
+  soundLevel: SoundLevel;
   onPause: () => void;
-  onToggleMute: () => void;
+  onCycleSoundLevel: () => void;
   onTakeBargain: (id: BargainId) => void;
 }
 
-export function BargainView({ state, isMuted, onPause, onToggleMute, onTakeBargain }: BargainViewProps) {
+export function BargainView({ state, soundLevel, onPause, onCycleSoundLevel, onTakeBargain }: BargainViewProps) {
   return (
     <div className="game-screen">
-      <Hud state={state} isMuted={isMuted} onPause={onPause} onToggleMute={onToggleMute} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <section className="bargain-room" aria-label="Cursed bargain room">
         <div className="altar-sprite" aria-hidden="true"><span /></div>
         <div className="bargain-copy"><span>Cursed Altar</span><h1>Power Has a Price</h1></div>

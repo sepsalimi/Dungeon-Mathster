@@ -11,9 +11,9 @@ import { useGame } from "./game/useGame";
 export default function App() {
   const game = useGame();
   const hudControls = {
-    isMuted: game.isMuted,
+    soundLevel: game.soundLevel,
     onPause: game.pauseGame,
-    onToggleMute: game.toggleMute,
+    onCycleSoundLevel: game.cycleSoundLevel,
   };
 
   return (

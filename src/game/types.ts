@@ -1,4 +1,5 @@
 export type TileType = "number" | "operator";
+export type SoundLevel = "mute" | "low" | "loud";
 export type RoomKind = "monster" | "shop" | "boss" | "mystery" | "bargain";
 export type GamePhase =
   | "start"

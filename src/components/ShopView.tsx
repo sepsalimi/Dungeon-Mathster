@@ -1,20 +1,20 @@
 import { shopUpgrades } from "../game/content";
-import type { GameState, ShopUpgradeId } from "../game/types";
+import type { GameState, ShopUpgradeId, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 
 interface ShopViewProps {
   state: GameState;
-  isMuted: boolean;
+  soundLevel: SoundLevel;
   onPause: () => void;
-  onToggleMute: () => void;
+  onCycleSoundLevel: () => void;
   onBuyUpgrade: (id: ShopUpgradeId) => void;
   onContinue: () => void;
 }
 
-export function ShopView({ state, isMuted, onPause, onToggleMute, onBuyUpgrade, onContinue }: ShopViewProps) {
+export function ShopView({ state, soundLevel, onPause, onCycleSoundLevel, onBuyUpgrade, onContinue }: ShopViewProps) {
   return (
     <div className="game-screen">
-      <Hud state={state} isMuted={isMuted} onPause={onPause} onToggleMute={onToggleMute} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <section className="shop-room" aria-label="Dungeon shop">
         <div className="merchant">
           <div className="merchant-sprite"><span /></div>

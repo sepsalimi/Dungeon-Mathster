@@ -1484,14 +1484,14 @@ p {
   100% { opacity: 0; transform: translate(-50%, -62%) rotate(-12deg) scale(1); }
 }
 
-.mute-icon {
+.sound-icon {
   position: relative;
-  width: 1.18rem;
+  width: 1.5rem;
   height: 1rem;
   display: block;
 }
 
-.mute-icon::before {
+.sound-icon::before {
   content: "";
   position: absolute;
   left: 0;
@@ -1502,18 +1502,40 @@ p {
   box-shadow: 0.34rem -0.22rem 0 0 #fff5d8, 0.34rem 0.22rem 0 0 #fff5d8;
 }
 
-.mute-icon::after {
+.sound-icon--low::after,
+.sound-icon--loud::after {
   content: "";
   position: absolute;
-  right: 0.04rem;
-  top: 0.16rem;
-  width: 0.45rem;
-  height: 0.7rem;
+  right: 0.08rem;
+  top: 0.18rem;
+  width: 0.38rem;
+  height: 0.64rem;
   border-right: 2px solid #fff5d8;
   border-radius: 50%;
 }
 
-.mute-icon.is-muted::after {
+.sound-icon--loud::after {
+  right: 0.18rem;
+  width: 0.34rem;
+  height: 0.52rem;
+}
+
+.sound-icon__wave {
+  position: absolute;
+  right: 0;
+  top: 0.08rem;
+  width: 0.48rem;
+  height: 0.84rem;
+  border-right: 2px solid #fff5d8;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.sound-icon--mute::before {
+  opacity: 0.55;
+}
+
+.sound-icon--mute::after {
   right: 0.18rem;
   top: 0.05rem;
   width: 0.12rem;

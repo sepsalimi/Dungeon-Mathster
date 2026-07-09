@@ -1,17 +1,17 @@
-import type { GameState } from "../game/types";
+import type { GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 import { MathGrid } from "./MathGrid";
 import { RoomScene } from "./RoomScene";
 
 interface CombatViewProps {
   state: GameState;
-  isMuted: boolean;
+  soundLevel: SoundLevel;
   onPause: () => void;
-  onToggleMute: () => void;
+  onCycleSoundLevel: () => void;
   onSubmitPath: (path: string[]) => void;
 }
 
-export function CombatView({ state, isMuted, onPause, onToggleMute, onSubmitPath }: CombatViewProps) {
+export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSubmitPath }: CombatViewProps) {
   const lowHealth = state.player.hp <= state.player.maxHp * 0.3;
   const frozen = state.frozenUntil > Date.now();
   const hurtNonce = state.feedback?.kind === "enemy" ? state.feedback.nonce : null;
@@ -19,7 +19,7 @@ export function CombatView({ state, isMuted, onPause, onToggleMute, onSubmitPath
 
   return (
     <div className={["game-screen", lowHealth ? "game-screen--danger" : "", hurtNonce ? "game-screen--hurt" : ""].filter(Boolean).join(" ")}>
-      <Hud state={state} isMuted={isMuted} onPause={onPause} onToggleMute={onToggleMute} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <RoomScene enemy={state.enemy} feedback={state.feedback} lowHealth={lowHealth} frozen={frozen} />
       {state.puzzle && <MathGrid puzzle={state.puzzle} startHintId={startHintId} onSubmitPath={onSubmitPath} />}
       {hurtNonce && state.enemy && (

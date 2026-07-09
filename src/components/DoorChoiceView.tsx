@@ -1,20 +1,20 @@
-import type { DoorChoice, GameState } from "../game/types";
+import type { DoorChoice, GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 
 interface DoorChoiceViewProps {
   state: GameState;
-  isMuted: boolean;
+  soundLevel: SoundLevel;
   onPause: () => void;
-  onToggleMute: () => void;
+  onCycleSoundLevel: () => void;
   onChooseDoor: (door: DoorChoice) => void;
 }
 
-export function DoorChoiceView({ state, isMuted, onPause, onToggleMute, onChooseDoor }: DoorChoiceViewProps) {
+export function DoorChoiceView({ state, soundLevel, onPause, onCycleSoundLevel, onChooseDoor }: DoorChoiceViewProps) {
   const hasSingleDoor = state.doors.length === 1;
 
   return (
     <div className="game-screen">
-      <Hud state={state} isMuted={isMuted} onPause={onPause} onToggleMute={onToggleMute} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <section className="door-room" aria-label="Choose a dungeon door">
         <div className="door-copy">
           <span>Room {state.roomsCleared} cleared</span>

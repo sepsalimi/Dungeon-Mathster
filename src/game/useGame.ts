@@ -9,7 +9,7 @@ import {
   shopUpgrades,
 } from "./content";
 import { isCorrectPath, makePuzzle } from "./math";
-import type { BargainId, DoorChoice, FeedbackState, GameState, PlayerState, ShopUpgradeId } from "./types";
+import type { BargainId, DoorChoice, FeedbackState, GameState, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
 
 const initialPlayer: PlayerState = {
   hp: 120,
@@ -44,12 +44,25 @@ interface MusicState {
 
 type MusicTheme = "fight" | "boss" | "door" | "shop" | "bargain";
 
+const soundLevelOrder: SoundLevel[] = ["loud", "mute", "low"];
+
+function nextSoundLevel(current: SoundLevel): SoundLevel {
+  const index = soundLevelOrder.indexOf(current);
+  return soundLevelOrder[(index + 1) % soundLevelOrder.length];
+}
+
+function getVolumeMultiplier(level: SoundLevel): number {
+  if (level === "mute") return 0;
+  if (level === "low") return 1;
+  return 3;
+}
+
 export function useGame() {
   const [state, setState] = useState<GameState>(initialState);
-  const [isMuted, setIsMuted] = useState(false);
+  const [soundLevel, setSoundLevel] = useState<SoundLevel>("loud");
   const audioContext = useRef<AudioContext | null>(null);
   const music = useRef<MusicState | null>(null);
-  const mutedRef = useRef(false);
+  const soundLevelRef = useRef<SoundLevel>("loud");
   const musicTheme = useRef<MusicTheme>("fight");
 
 const makeRunPuzzle = useCallback((size: number, player: PlayerState) => {
@@ -63,7 +76,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     if (theme) musicTheme.current = theme;
     primeAudio(audioContext);
     if (theme && music.current?.theme !== theme) stopMusic(music);
-    startMusic(audioContext, music, mutedRef, musicTheme.current);
+    startMusic(audioContext, music, soundLevelRef, musicTheme.current);
   }, []);
 
   const startRun = useCallback(() => {
@@ -94,15 +107,16 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     setState((current) => ({ ...current, paused: false, feedback: null }));
   }, [ensureAudio]);
 
-  const toggleMute = useCallback(() => {
-    setIsMuted((current) => {
-      const next = !current;
-      mutedRef.current = next;
-      if (next) {
+  const cycleSoundLevel = useCallback(() => {
+    setSoundLevel((current) => {
+      const next = nextSoundLevel(current);
+      soundLevelRef.current = next;
+      if (next === "mute") {
         stopMusic(music);
       } else {
+        stopMusic(music);
         primeAudio(audioContext);
-        startMusic(audioContext, music, mutedRef, musicTheme.current);
+        startMusic(audioContext, music, soundLevelRef, musicTheme.current);
       }
       return next;
     });
@@ -305,7 +319,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
   }, [pauseGame]);
 
   useEffect(() => {
-    if (state.feedback) playFeedback(audioContext, state.feedback, mutedRef);
+    if (state.feedback) playFeedback(audioContext, state.feedback, soundLevelRef);
   }, [state.feedback?.nonce]);
 
   useEffect(() => {
@@ -316,10 +330,10 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     const nextTheme = getMusicTheme(state);
     if (!nextTheme) return;
     musicTheme.current = nextTheme;
-    if (!audioContext.current || mutedRef.current) return;
+    if (!audioContext.current || soundLevelRef.current === "mute") return;
     if (music.current?.theme !== nextTheme) {
       stopMusic(music);
-      startMusic(audioContext, music, mutedRef, nextTheme);
+      startMusic(audioContext, music, soundLevelRef, nextTheme);
     }
   }, [state.phase, state.enemy?.isBoss]);
 
@@ -351,7 +365,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
 
   return {
     state,
-    isMuted,
+    soundLevel,
     startRun,
     submitPath,
     chooseDoor,
@@ -360,7 +374,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     startBossFight,
     resumeGame,
     pauseGame,
-    toggleMute,
+    cycleSoundLevel,
     takeBargain,
   };
 }
@@ -404,19 +418,35 @@ function primeAudio(audioContext: MutableRefObject<AudioContext | null>) {
 function startMusic(
   audioContext: MutableRefObject<AudioContext | null>,
   music: MutableRefObject<MusicState | null>,
-  mutedRef: MutableRefObject<boolean>,
+  soundLevelRef: MutableRefObject<SoundLevel>,
   theme: MusicTheme,
 ) {
   const context = audioContext.current;
-  if (!context || context.state !== "running" || music.current || mutedRef.current) return;
+  const volumeMultiplier = getVolumeMultiplier(soundLevelRef.current);
+  if (!context || context.state !== "running" || music.current || volumeMultiplier === 0) return;
 
   const pattern = musicPatterns[theme];
   let index = 0;
 const playStep = () => {
-    playTone(context, pattern.bass[index % pattern.bass.length], 0.025, pattern.beat * 0.00048, pattern.bassType, pattern.volume);
+    playTone(
+      context,
+      pattern.bass[index % pattern.bass.length],
+      0.025,
+      pattern.beat * 0.00048,
+      pattern.bassType,
+      pattern.volume * volumeMultiplier,
+    );
     if (index % pattern.melodyEvery === 0) {
       window.setTimeout(
-        () => playTone(context, pattern.melody[index % pattern.melody.length], 0.025, pattern.beat * 0.00034, "sine", pattern.volume * 0.82),
+        () =>
+          playTone(
+            context,
+            pattern.melody[index % pattern.melody.length],
+            0.025,
+            pattern.beat * 0.00034,
+            "sine",
+            pattern.volume * 0.82 * volumeMultiplier,
+          ),
         pattern.beat * 0.24,
       );
     }
@@ -434,24 +464,31 @@ function stopMusic(music: MutableRefObject<MusicState | null>) {
   music.current = null;
 }
 
-function playFeedback(audioContext: MutableRefObject<AudioContext | null>, feedback: FeedbackState, mutedRef: MutableRefObject<boolean>) {
+function playFeedback(
+  audioContext: MutableRefObject<AudioContext | null>,
+  feedback: FeedbackState,
+  soundLevelRef: MutableRefObject<SoundLevel>,
+) {
   const context = audioContext.current;
-  if (!context || context.state !== "running" || mutedRef.current) return;
+  const volumeMultiplier = getVolumeMultiplier(soundLevelRef.current);
+  if (!context || context.state !== "running" || volumeMultiplier === 0) return;
 
   if (feedback.kind === "hit") {
-    playTone(context, 960, 0.004, 0.055, "square", 0.13);
-    window.setTimeout(() => playTone(context, 420, 0.006, 0.08, "sawtooth", 0.08), 32);
+    playTone(context, 960, 0.004, 0.055, "square", 0.13 * volumeMultiplier);
+    window.setTimeout(() => playTone(context, 420, 0.006, 0.08, "sawtooth", 0.08 * volumeMultiplier), 32);
   }
-  if (feedback.kind === "miss") playTone(context, 260, 0.02, 0.13, "sine", 0.045);
+  if (feedback.kind === "miss") playTone(context, 260, 0.02, 0.13, "sine", 0.045 * volumeMultiplier);
   if (feedback.kind === "enemy") {
-    playTone(context, 72, 0.06, 0.16, "sawtooth", 0.11);
-    window.setTimeout(() => playTone(context, 55, 0.04, 0.1, "square", 0.08), 55);
+    playTone(context, 72, 0.06, 0.16, "sawtooth", 0.11 * volumeMultiplier);
+    window.setTimeout(() => playTone(context, 55, 0.04, 0.1, "square", 0.08 * volumeMultiplier), 55);
   }
   if (feedback.kind === "buy") {
-    playTone(context, 660, 0.02, 0.08, "triangle", 0.09);
-    window.setTimeout(() => playTone(context, 880, 0.02, 0.08, "triangle", 0.08), 70);
+    playTone(context, 660, 0.02, 0.08, "triangle", 0.09 * volumeMultiplier);
+    window.setTimeout(() => playTone(context, 880, 0.02, 0.08, "triangle", 0.08 * volumeMultiplier), 70);
   }
-  if (feedback.kind === "blocked" || feedback.kind === "pause") playTone(context, 240, 0.02, 0.08, "sine", 0.06);
+  if (feedback.kind === "blocked" || feedback.kind === "pause") {
+    playTone(context, 240, 0.02, 0.08, "sine", 0.06 * volumeMultiplier);
+  }
 }
 
 function playTone(context: AudioContext, frequency: number, attack: number, duration: number, type: OscillatorType, volume = 0.11) {
