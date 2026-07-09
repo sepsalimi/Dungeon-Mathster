@@ -14,10 +14,10 @@ export function DoorChoiceView({ state, soundLevel, onPause, onCycleSoundLevel, 
 
   return (
     <div className="game-screen">
-      <Hud gold={state.player.gold} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <section className="door-room" aria-label="Choose a dungeon door">
         <div className="door-copy">
-          <span>Room {state.roomsCleared} cleared</span>
+          <span>Floor {state.floor} - Room {state.roomsCleared} cleared</span>
           <h1>{hasSingleDoor ? "The Boss Gate" : "Choose a Door"}</h1>
         </div>
         <div className={hasSingleDoor ? "doors doors--single" : "doors"}>

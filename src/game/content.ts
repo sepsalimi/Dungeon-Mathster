@@ -1,10 +1,19 @@
 import type { BargainOption, DoorChoice, EnemyState, ShopUpgrade } from "./types";
+import { bossDefinitions } from "./progression";
 
 export const MONSTER_REWARD = 18;
-export const BOSS_REWARD = 50;
 export const MONSTER_ROOMS_BEFORE_BOSS = 3;
 
-const monsterNames = ["Moss Gnawer", "Cinder Imp", "Bone Wisp", "Slime Knight"];
+const monsterNames = [
+  "Moss Gnawer",
+  "Cinder Imp",
+  "Bone Wisp",
+  "Slime Knight",
+  "Minus Mite",
+  "Product Bat",
+  "Order Imp",
+  "Royal Remainder",
+];
 
 export const shopUpgrades: ShopUpgrade[] = [
   { id: "heal", name: "Heal HP", description: "Restore 35 HP now.", cost: 15 },
@@ -41,16 +50,20 @@ export const bargainOptions: BargainOption[] = [
   },
 ];
 
-export function makeEnemy(isBoss: boolean): EnemyState {
+export function makeEnemy(isBoss: boolean, floor: number): EnemyState {
   if (isBoss) {
-    return { name: "Count Calculus", hp: 6, maxHp: 6, damage: 5, isBoss: true };
+    const boss = bossDefinitions[floor];
+    return { name: boss.name, hp: boss.hp, maxHp: boss.hp, damage: boss.damage, isBoss: true };
   }
+
+  const hp = 2 + floor;
+  const damage = 4 + floor * 2;
 
   return {
     name: monsterNames[Math.floor(Math.random() * monsterNames.length)],
-    hp: 3,
-    maxHp: 3,
-    damage: 5,
+    hp,
+    maxHp: hp,
+    damage,
     isBoss: false,
   };
 }

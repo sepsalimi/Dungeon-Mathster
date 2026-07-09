@@ -13,7 +13,7 @@ interface BargainViewProps {
 export function BargainView({ state, soundLevel, onPause, onCycleSoundLevel, onTakeBargain }: BargainViewProps) {
   return (
     <div className="game-screen">
-      <Hud gold={state.player.gold} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <section className="bargain-room" aria-label="Cursed bargain room">
         <div className="altar-sprite" aria-hidden="true"><span /></div>
         <div className="bargain-copy"><span>Cursed Altar</span><h1>Power Has a Price</h1></div>

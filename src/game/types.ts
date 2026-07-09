@@ -1,6 +1,16 @@
 export type TileType = "number" | "operator";
 export type SoundLevel = "mute" | "low" | "loud";
 export type RoomKind = "monster" | "shop" | "boss" | "mystery" | "bargain";
+export type MathOperator = "+" | "-" | "*";
+export type RelicId =
+  | "oracleLens"
+  | "negativeHeart"
+  | "glassBlade"
+  | "coinHex"
+  | "vampireFang"
+  | "ironTheorem"
+  | "timeshard"
+  | "goldenAbacus";
 export type GamePhase =
   | "start"
   | "combat"
@@ -30,6 +40,7 @@ export interface PlayerState {
   hp: number;
   maxHp: number;
   gold: number;
+  goldBonus: number;
   armor: number;
   swordDamage: number;
   freezeNextRoom: boolean;
@@ -37,6 +48,7 @@ export interface PlayerState {
   negativesUnlocked: boolean;
   extraDamageTaken: number;
   lifesteal: number;
+  relics: RelicId[];
 }
 
 export interface EnemyState {

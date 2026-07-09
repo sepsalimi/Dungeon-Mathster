@@ -14,7 +14,7 @@ interface ShopViewProps {
 export function ShopView({ state, soundLevel, onPause, onCycleSoundLevel, onBuyUpgrade, onContinue }: ShopViewProps) {
   return (
     <div className="game-screen">
-      <Hud gold={state.player.gold} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <section className="shop-room" aria-label="Dungeon shop">
         <div className="merchant">
           <div className="merchant-sprite"><span /></div>

@@ -1388,7 +1388,56 @@ p {
 
 
 .hud {
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.run-panel {
+  min-width: 0;
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.42rem 0.55rem;
+  color: #fff5d8;
+  background: #2b2230;
+  border: 1px solid rgba(245, 239, 224, 0.13);
+  box-shadow: 0 4px 0 #0b0910;
+}
+
+.run-panel__topline,
+.relic-list {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.run-panel__topline span,
+.relic-list small {
+  color: #f0c56f;
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.run-panel__topline strong {
+  flex: 0 0 auto;
+  color: #fff8e7;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.relic-list span {
+  min-width: 0;
+  overflow: hidden;
+  color: #bff9ff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.05;
+  text-align: right;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .hud-button {

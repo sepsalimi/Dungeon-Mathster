@@ -1,7 +1,8 @@
 import type { GameState, SoundLevel } from "../game/types";
+import { MAX_FLOOR, getRelicBadges } from "../game/progression";
 
 interface HudProps {
-  gold: GameState["player"]["gold"];
+  state: GameState;
   soundLevel: SoundLevel;
   onPause: () => void;
   onCycleSoundLevel: () => void;
@@ -13,15 +14,20 @@ const soundLabels: Record<SoundLevel, string> = {
   loud: "Loud sound",
 };
 
-export function Hud({ gold, soundLevel, onPause, onCycleSoundLevel }: HudProps) {
+export function Hud({ state, soundLevel, onPause, onCycleSoundLevel }: HudProps) {
+  const relics = getRelicBadges(state.player);
+
   return (
     <header className="hud">
-      <div className="gold-pill" aria-label={`${gold} gold`}>
-        <span className="coin-icon" aria-hidden="true">G</span>
-        <span className="gold-text">
-          <small>Gold</small>
-          <strong>{gold}</strong>
-        </span>
+      <div className="run-panel" aria-label={`Floor ${state.floor} of ${MAX_FLOOR}, ${state.player.gold} gold`}>
+        <div className="run-panel__topline">
+          <span>Floor {state.floor}/{MAX_FLOOR}</span>
+          <strong>{state.player.gold}g</strong>
+        </div>
+        <div className="relic-list" aria-label={relics.length ? `Relics: ${relics.join(", ")}` : "Relics: none"}>
+          <small>Relics</small>
+          <span>{relics.length ? relics.join(" | ") : "None"}</span>
+        </div>
       </div>
       <button className="hud-button" type="button" onClick={onCycleSoundLevel} aria-label={soundLabels[soundLevel]}>
         <span className={`sound-icon sound-icon--${soundLevel}`} aria-hidden="true">

@@ -1,4 +1,4 @@
-import type { GridTile, Puzzle } from "./types";
+import type { GridTile, MathOperator, Puzzle } from "./types";
 
 const positiveNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const mixedNumbers = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -6,17 +6,22 @@ const mixedNumbers = [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 interface PuzzleOptions {
   allowNegative?: boolean;
   pathLength?: number;
+  operators?: MathOperator[];
 }
 
 export function makePuzzle(size: number, options: PuzzleOptions = {}): Puzzle {
   const numberRange = options.allowNegative ? mixedNumbers : positiveNumbers;
   const pathLength = options.pathLength ?? (size === 3 ? 3 : 7);
+  const operators = options.operators ?? ["+"];
   const answerPath = buildAnswerPath(size, pathLength);
   const pathNumbers = new Map<string, number>();
+  const pathOperators = new Map<string, MathOperator>();
 
   answerPath.forEach((id, index) => {
     if (index % 2 === 0) {
       pathNumbers.set(id, pick(numberRange));
+    } else {
+      pathOperators.set(id, pick(operators));
     }
   });
 
@@ -30,7 +35,7 @@ export function makePuzzle(size: number, options: PuzzleOptions = {}): Puzzle {
         row,
         col,
         type: isNumber ? "number" : "operator",
-        value: isNumber ? String(pathNumbers.get(id) ?? pick(numberRange)) : "+",
+        value: isNumber ? String(pathNumbers.get(id) ?? pick(numberRange)) : String(pathOperators.get(id) ?? pick(operators)),
       });
     }
   }
@@ -44,10 +49,28 @@ export function evaluatePath(path: string[], tiles: GridTile[]): number | null {
     return null;
   }
 
-  return path.reduce((sum, id) => {
-    const tile = tiles.find((candidate) => candidate.id === id);
-    return tile?.type === "number" ? sum + Number(tile.value) : sum;
-  }, 0);
+  const tileMap = new Map(tiles.map((tile) => [tile.id, tile]));
+  const first = tileMap.get(path[0]);
+  if (!first || first.type !== "number") return null;
+
+  let total = 0;
+  let currentTerm = Number(first.value);
+
+  for (let index = 1; index < path.length; index += 2) {
+    const operator = tileMap.get(path[index]);
+    const nextNumber = tileMap.get(path[index + 1]);
+    if (!operator || !nextNumber || operator.type !== "operator" || nextNumber.type !== "number") return null;
+
+    const value = Number(nextNumber.value);
+    if (operator.value === "*") {
+      currentTerm *= value;
+    } else {
+      total += currentTerm;
+      currentTerm = operator.value === "-" ? -value : value;
+    }
+  }
+
+  return total + currentTerm;
 }
 
 export function isCorrectPath(path: string[], tiles: GridTile[], target: number): boolean {
@@ -159,6 +182,6 @@ function manhattanDistance(a: GridTile, b: GridTile): number {
   return Math.abs(a.row - b.row) + Math.abs(a.col - b.col);
 }
 
-function pick(values: number[]): number {
+function pick<T>(values: T[]): T {
   return values[Math.floor(Math.random() * values.length)];
 }

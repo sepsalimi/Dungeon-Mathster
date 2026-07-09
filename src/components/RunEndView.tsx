@@ -11,11 +11,11 @@ export function RunEndView({ state, onRestart }: RunEndViewProps) {
   return (
     <section className={`end-screen ${won ? "end-screen--victory" : "end-screen--defeat"}`}>
       <div className="end-sigil" />
-      <span>{won ? "Boss Relic Claimed" : "Run Ended"}</span>
-      <h1>{won ? "Lifesteal Found" : "GAME OVER"}</h1>
+      <span>{won ? "Dungeon Cleared" : "Run Ended"}</span>
+      <h1>{won ? "BEDMAS MASTERED" : "GAME OVER"}</h1>
       <p>
         {won
-          ? `You cleared Floor 1 and gained Lifesteal +${state.player.lifesteal}: heal on every successful attack.`
+          ? `You cleared Floor ${state.floor} with ${state.player.gold} gold and ${state.player.relics.length} relics.`
           : "The dungeon claimed this run. Start again and cut deeper."}
       </p>
       <button className="primary-action" type="button" onClick={onRestart}>Start New Run</button>

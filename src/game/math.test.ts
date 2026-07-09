@@ -62,6 +62,48 @@ describe("math puzzle generation", () => {
 
     expect(evaluatePath(puzzle.answerPath, puzzle.tiles)).toBe(13);
   });
+
+  it("evaluates subtraction paths", () => {
+    const tiles = [
+      { id: "0-0", row: 0, col: 0, type: "number" as const, value: "9" },
+      { id: "0-1", row: 0, col: 1, type: "operator" as const, value: "-" },
+      { id: "0-2", row: 0, col: 2, type: "number" as const, value: "4" },
+    ];
+
+    expect(evaluatePath(["0-0", "0-1", "0-2"], tiles)).toBe(5);
+  });
+
+  it("respects multiplication before addition and subtraction", () => {
+    const puzzle = {
+      size: 3,
+      target: 5,
+      answerPath: ["0-0", "0-1", "0-2", "1-2", "2-2"],
+      tiles: [
+        { id: "0-0", row: 0, col: 0, type: "number" as const, value: "2" },
+        { id: "0-1", row: 0, col: 1, type: "operator" as const, value: "+" },
+        { id: "0-2", row: 0, col: 2, type: "number" as const, value: "3" },
+        { id: "1-0", row: 1, col: 0, type: "operator" as const, value: "+" },
+        { id: "1-1", row: 1, col: 1, type: "number" as const, value: "8" },
+        { id: "1-2", row: 1, col: 2, type: "operator" as const, value: "*" },
+        { id: "2-0", row: 2, col: 0, type: "number" as const, value: "1" },
+        { id: "2-1", row: 2, col: 1, type: "operator" as const, value: "-" },
+        { id: "2-2", row: 2, col: 2, type: "number" as const, value: "1" },
+      ],
+    };
+
+    expect(evaluatePath(puzzle.answerPath, puzzle.tiles)).toBe(5);
+  });
+
+  it("can generate valid puzzles with subtraction and multiplication operators", () => {
+    for (const operator of ["-", "*"] as const) {
+      const puzzle = makePuzzle(3, { operators: [operator], pathLength: 5 });
+
+      expect(isValidPathShape(puzzle.answerPath, puzzle.tiles)).toBe(true);
+      expect(isCorrectPath(puzzle.answerPath, puzzle.tiles, puzzle.target)).toBe(true);
+      expect(puzzle.tiles.some((tile) => tile.type === "operator" && tile.value === operator)).toBe(true);
+    }
+  });
+
   it("can generate valid puzzles with negative number tiles", () => {
     let sawNegative = false;
 

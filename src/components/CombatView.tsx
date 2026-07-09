@@ -19,7 +19,7 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
 
   return (
     <div className={["game-screen", lowHealth ? "game-screen--danger" : "", hurtNonce ? "game-screen--hurt" : ""].filter(Boolean).join(" ")}>
-      <Hud gold={state.player.gold} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
+      <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <RoomScene enemy={state.enemy} feedback={state.feedback} lowHealth={lowHealth} frozen={frozen} />
       {state.puzzle && (
         <MathGrid player={state.player} puzzle={state.puzzle} startHintId={startHintId} onSubmitPath={onSubmitPath} />
