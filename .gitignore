@@ -230,3 +230,6 @@ pnpm-debug.log*
 # tsc output for vite config
 vite.config.js
 vite.config.d.ts
+
+# vite-plugin-pwa dev output
+dev-dist/
