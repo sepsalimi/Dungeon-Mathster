@@ -1,4 +1,4 @@
-import { shopUpgrades } from "../game/content";
+import { getUpgradeCost, shopUpgrades } from "../game/shop";
 import type { GameState, ShopUpgradeId, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 import { PlayerVitals } from "./PlayerVitals";
@@ -29,11 +29,12 @@ export function ShopView({ state, soundLevel, onPause, onCycleSoundLevel, onBuyU
         <PlayerVitals player={state.player} />
         <div className="upgrade-list">
           {shopUpgrades.map((upgrade) => {
-            const affordable = state.player.gold >= upgrade.cost;
+            const cost = getUpgradeCost(state.player, upgrade);
+            const affordable = state.player.gold >= cost;
             return (
               <button key={upgrade.id} type="button" className="upgrade-row" onClick={() => onBuyUpgrade(upgrade.id)} disabled={!affordable}>
                 <span><strong>{upgrade.name}</strong><small>{upgrade.description}</small></span>
-                <em>{upgrade.cost}g</em>
+                <em>{cost}g</em>
               </button>
             );
           })}

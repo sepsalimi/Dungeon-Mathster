@@ -1,4 +1,4 @@
-import { bargainOptions } from "../game/content";
+import { bargainOptions } from "../game/shop";
 import type { BargainId, GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 import { PlayerVitals } from "./PlayerVitals";

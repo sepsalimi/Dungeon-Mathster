@@ -108,6 +108,7 @@ export interface ShopUpgrade {
   name: string;
   description: string;
   cost: number;
+  costStep: number;
 }
 
 export interface BargainOption {

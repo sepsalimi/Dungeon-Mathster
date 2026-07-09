@@ -1,3 +1,4 @@
+// Game state hook: run lifecycle, combat loop, doors, shop, bargains, and audio.
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   nextSoundLevel,
@@ -11,35 +12,38 @@ import {
   type MusicTheme,
 } from "./audio";
 import {
-  bargainOptions,
   makeDoorChoices,
   makeEnemy,
   MONSTER_REWARD,
   MONSTER_ROOMS_BEFORE_BOSS,
-  shopUpgrades,
+  MYSTERY_GOLD,
+  MYSTERY_HEAL,
 } from "./content";
+import { applyLifesteal, getEnemyAttackInterval, resolveEnemyAttack } from "./combat";
 import { isCorrectPath, makePuzzle } from "./math";
 import { makeTutorialDoors, markTutorialSeen, shouldShowTutorial } from "./tutorial";
 import {
+  FINAL_FLOOR,
   STARTING_MAX_HP,
-  addItem,
+  STARTING_SWORD_DAMAGE,
   addPermutationBonus,
   applyBossItem,
   getBossReward,
   getFloorOperators,
   getRoomPathLength,
 } from "./progression";
-import type { BargainId, DoorChoice, GameState, ItemId, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
+import { applyBargain, applyShopUpgrade, getShopRewardItem, getUpgradeCost, shopUpgrades } from "./shop";
+import type { BargainId, DoorChoice, GameState, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
 
 const initialPlayer: PlayerState = {
-  hp: 120,
+  hp: STARTING_MAX_HP,
   maxHp: STARTING_MAX_HP,
   temporaryHp: 0,
   gold: 0,
   goldBonus: 0,
   damageReductionArmor: 0,
   barbedArmor: 0,
-  swordDamage: 1,
+  swordDamage: STARTING_SWORD_DAMAGE,
   oracleLensChance: 0,
   negativesUnlocked: false,
   extraDamageTaken: 0,
@@ -178,6 +182,19 @@ export function useGame() {
 
       if (current.enemy.isBoss) {
         const bossGold = getBossReward(current.floor);
+
+        if (current.floor >= FINAL_FLOOR) {
+          return {
+            ...current,
+            phase: "victory",
+            enemy: { ...current.enemy, hp: 0 },
+            puzzle: null,
+            doors: [],
+            player: { ...healedPlayer, gold: healedPlayer.gold + bossGold },
+            feedback: null,
+          };
+        }
+
         const bossReward = applyBossItem({ ...healedPlayer, gold: healedPlayer.gold + bossGold }, current.floor);
         const nextFloor = current.floor + 1;
         const nonce = Date.now();
@@ -291,14 +308,14 @@ export function useGame() {
         doors: [],
         player: {
           ...current.player,
-          hp: Math.min(current.player.maxHp, current.player.hp + 20),
-          gold: current.player.gold + 5,
+          hp: Math.min(current.player.maxHp, current.player.hp + MYSTERY_HEAL),
+          gold: current.player.gold + MYSTERY_GOLD,
         },
         feedback: {
           kind: "buy",
-          message: "Mystery reward: +20 HP and +5 gold.",
+          message: `Mystery room: +${MYSTERY_HEAL} HP and +${MYSTERY_GOLD} gold.`,
           nonce: Date.now(),
-          rewards: [{ kind: "gold", amount: 5 }],
+          rewards: [{ kind: "gold", amount: MYSTERY_GOLD }],
         },
       }));
       window.setTimeout(() => setState((current) => startNextFight({ ...current, feedback: null }, makeRunPuzzle)), 1_800);
@@ -311,55 +328,7 @@ export function useGame() {
   const takeBargain = useCallback((id: BargainId) => {
     ensureAudio("bargain");
     setState((current) => {
-      let player = { ...current.player };
-      let message = bargainOptions.find((option) => option.id === id)?.name ?? "Bargain taken";
-      let rewardItem: ItemId | null = null;
-
-      if (id === "oracleLens") {
-        player = addItem(player, "oracleLens");
-        rewardItem = "oracleLens";
-        player.oracleLensChance = Math.min(0.8, player.oracleLensChance + 0.22);
-        player.maxHp = Math.max(1, player.maxHp - 20);
-        player.hp = Math.min(player.hp, player.maxHp);
-        message = "Oracle Lens taken. Some answer starts will glow.";
-      }
-      if (id === "negativeHeart") {
-        player = addItem(player, "negativeHeart");
-        rewardItem = "negativeHeart";
-        player.maxHp += 30;
-        player.hp = Math.min(player.maxHp, player.hp + 30);
-        player.negativesUnlocked = true;
-        message = "Negative Heart taken. More HP, stranger numbers.";
-      }
-      if (id === "glassBlade") {
-        player = addItem(player, "glassBlade");
-        rewardItem = "glassBlade";
-        player.swordDamage = Math.max(1, player.swordDamage * 2);
-        player.maxHp = Math.max(1, Math.floor(player.maxHp / 2));
-        player.hp = Math.min(player.hp, player.maxHp);
-        message = "Glass Blade taken. Damage doubled, health halved.";
-      }
-      if (id === "coinHex") {
-        player = addItem(player, "coinHex");
-        rewardItem = "coinHex";
-        if (Math.random() < 0.5) {
-          player.swordDamage += 1;
-          message = "Coin Hex: heads. Sword damage increased.";
-        } else {
-          player.extraDamageTaken += 2;
-          message = "Coin Hex: tails. Monsters hit harder.";
-        }
-      }
-      if (id === "giantEquation") {
-        player = addItem(player, "longEquation");
-        rewardItem = "longEquation";
-        player.maxHp += 40;
-        player.hp = Math.min(player.maxHp, player.hp + 40);
-        player.swordDamage += 2;
-        player.permutationBonus += 1;
-        message = "Giant Equation taken. More power, longer answers.";
-      }
-
+      const { player, message, item } = applyBargain(current.player, id);
       return startNextFight(
         {
           ...current,
@@ -368,7 +337,7 @@ export function useGame() {
             kind: "buy",
             message,
             nonce: Date.now(),
-            rewards: rewardItem ? [{ kind: "item", itemId: rewardItem }] : undefined,
+            rewards: item ? [{ kind: "item", itemId: item }] : undefined,
           },
         },
         makeRunPuzzle,
@@ -382,38 +351,14 @@ export function useGame() {
     if (!upgrade) return;
 
     setState((current) => {
-      if (current.player.gold < upgrade.cost) {
+      if (current.player.gold < getUpgradeCost(current.player, upgrade)) {
         return { ...current, feedback: { kind: "blocked", message: "Not enough gold.", nonce: Date.now() } };
       }
 
-      const player = { ...current.player, gold: current.player.gold - upgrade.cost };
       const rewardItem = getShopRewardItem(id);
-      if (id === "heal") player.hp = Math.min(player.maxHp, player.hp + 35);
-      if (id === "maxHp") {
-        Object.assign(player, addItem(player, "maxHp"));
-        player.maxHp += 20;
-        player.hp = Math.min(player.maxHp, player.hp + 20);
-      }
-      if (id === "damageReductionArmor") {
-        Object.assign(player, addItem(player, "damageReductionArmor"));
-        player.damageReductionArmor += 1;
-      }
-      if (id === "temporaryArmor") {
-        Object.assign(player, addItem(player, "temporaryArmor"));
-        player.temporaryHp += 25;
-      }
-      if (id === "barbedArmor") {
-        Object.assign(player, addItem(player, "barbedArmor"));
-        player.barbedArmor += 1;
-      }
-      if (id === "sword") {
-        Object.assign(player, addItem(player, "sword"));
-        player.swordDamage += 1;
-      }
-
       return {
         ...current,
-        player,
+        player: applyShopUpgrade(current.player, id),
         feedback: {
           kind: "buy",
           message: `${upgrade.name} purchased.`,
@@ -468,17 +413,25 @@ export function useGame() {
     const timer = window.setInterval(() => {
       setState((current) => {
         if (current.paused || current.phase !== "combat" || !current.enemy) return current;
-        const damage = Math.max(1, current.enemy.damage - current.player.damageReductionArmor + current.player.extraDamageTaken);
-        const temporaryHp = Math.max(0, current.player.temporaryHp - damage);
-        const damageToHp = Math.max(0, damage - current.player.temporaryHp);
-        const hp = Math.max(0, current.player.hp - damageToHp);
-        const enemyHp = Math.max(0, current.enemy.hp - current.player.barbedArmor);
-        const player = { ...current.player, hp, temporaryHp };
-        if (hp <= 0) stopMusic(music);
+        const { player, enemyHp, damage } = resolveEnemyAttack(current.player, current.enemy);
+        if (player.hp <= 0) stopMusic(music);
 
-        if (hp > 0 && enemyHp <= 0 && current.player.barbedArmor > 0) {
+        if (player.hp > 0 && enemyHp <= 0 && current.player.barbedArmor > 0) {
           if (current.enemy.isBoss) {
             const bossGold = getBossReward(current.floor);
+
+            if (current.floor >= FINAL_FLOOR) {
+              return {
+                ...current,
+                phase: "victory",
+                enemy: { ...current.enemy, hp: 0 },
+                puzzle: null,
+                doors: [],
+                player: { ...player, gold: player.gold + bossGold },
+                feedback: null,
+              };
+            }
+
             const bossReward = applyBossItem({ ...player, gold: player.gold + bossGold }, current.floor);
             const nextFloor = current.floor + 1;
             return {
@@ -523,16 +476,16 @@ export function useGame() {
 
         return {
           ...current,
-          phase: hp <= 0 ? "defeat" : current.phase,
+          phase: player.hp <= 0 ? "defeat" : current.phase,
           enemy: { ...current.enemy, hp: enemyHp },
           player,
           feedback: { kind: "enemy", message: "", nonce: Date.now(), amount: damage },
         };
       });
-    }, 5_000);
+    }, getEnemyAttackInterval(state.floor));
 
     return () => window.clearInterval(timer);
-  }, [state.phase, state.enemy?.name, state.paused]);
+  }, [state.phase, state.enemy?.name, state.paused, state.floor]);
 
   return {
     state,
@@ -579,20 +532,6 @@ function startSpecificFight(
         ? null
         : current.feedback,
   };
-}
-
-function getShopRewardItem(id: ShopUpgradeId): ItemId | null {
-  if (id === "heal") return null;
-  if (id === "maxHp") return "maxHp";
-  if (id === "damageReductionArmor") return "damageReductionArmor";
-  if (id === "temporaryArmor") return "temporaryArmor";
-  if (id === "barbedArmor") return "barbedArmor";
-  return "sword";
-}
-
-function applyLifesteal(player: PlayerState): PlayerState {
-  if (player.lifesteal <= 0 || player.hp <= 0) return player;
-  return { ...player, hp: Math.min(player.maxHp, player.hp + player.lifesteal) };
 }
 
 function getMusicTheme(state: GameState): MusicTheme | null {
