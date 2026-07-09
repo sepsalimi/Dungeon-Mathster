@@ -596,12 +596,14 @@ button {
   font-size: 0.82rem;
   font-weight: 900;
   letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 rgba(45, 16, 20, 0.8);
 }
 
 .player-health-label strong {
   color: var(--text-strong);
   font-size: 1.22rem;
   line-height: 1;
+  text-shadow: 0 1px 0 rgba(45, 16, 20, 0.8);
 }
 
 .player-health-track {
