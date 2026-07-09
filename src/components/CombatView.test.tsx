@@ -54,10 +54,8 @@ const combatState: GameState = {
   tutorial: "killEnemy",
   tutorialEnemyHitDone: true,
   showFloorScroll: false,
+  floorIntroNonce: 0,
   pendingBossFight: false,
-  fightStats: { misses: 0, hitsTaken: 1, correctHits: 1 },
-  struggleTutorialOffered: false,
-  tutorialOffer: false,
 };
 
 describe("CombatView tutorial cues", () => {

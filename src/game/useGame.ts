@@ -21,9 +21,7 @@ import {
 } from "./content";
 import { applyLifesteal, getEnemyAttackInterval, resolveEnemyAttack } from "./combat";
 import { isCorrectPath, makePuzzle } from "./math";
-import { getTutorialOnNewGame } from "./settings";
-import { withStrugglePause } from "./struggle";
-import { makeTutorialDoors, makeTutorialEnemy, markTutorialSeen } from "./tutorial";
+import { makeTutorialDoors, makeTutorialEnemy } from "./tutorial";
 import {
   FINAL_FLOOR,
   STARTING_MAX_HP,
@@ -36,7 +34,6 @@ import {
 } from "./progression";
 import { applyBargain, applyShopUpgrade, getShopRewardItem, getUpgradeCost, shopUpgrades } from "./shop";
 import type { BargainId, DoorChoice, GameState, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
-import { emptyFightStats } from "./types";
 
 const initialPlayer: PlayerState = {
   hp: STARTING_MAX_HP,
@@ -69,10 +66,8 @@ const initialState: GameState = {
   tutorial: null,
   tutorialEnemyHitDone: false,
   showFloorScroll: true,
+  floorIntroNonce: 0,
   pendingBossFight: false,
-  fightStats: emptyFightStats(),
-  struggleTutorialOffered: false,
-  tutorialOffer: false,
 };
 
 const REWARD_TRANSITION_DELAY = 1_550;
@@ -100,30 +95,19 @@ export function useGame() {
     startMusic(audioContext, music, soundLevelRef, musicTheme.current);
   }, []);
 
-  const startRun = useCallback(() => {
+  const startRun = useCallback((withTutorial = false) => {
     ensureAudio("fight");
     window.history.replaceState({ dungeonMathster: true }, "");
     window.history.pushState({ dungeonMathsterPause: true }, "");
-    setState({
-      ...initialState,
-      phase: "floorIntro",
-      player: { ...initialPlayer },
-      showFloorScroll: true,
-      pendingBossFight: false,
-      fightStats: emptyFightStats(),
-      struggleTutorialOffered: false,
-      tutorialOffer: false,
-    });
+    setState(makeNewRunState(withTutorial));
   }, [ensureAudio]);
 
   const confirmFloorReady = useCallback(() => {
     ensureAudio("fight");
     setState((current) => {
-      const withTutorial = getTutorialOnNewGame() && current.floor === 1 && current.roomsCleared === 0;
       return startSpecificFight(
         {
           ...current,
-          tutorial: withTutorial ? "swipe" : null,
           tutorialEnemyHitDone: false,
         },
         current.pendingBossFight,
@@ -145,23 +129,7 @@ export function useGame() {
   const resumeGame = useCallback(() => {
     ensureAudio(musicTheme.current);
     window.history.pushState({ dungeonMathsterPause: true }, "");
-    setState((current) => ({ ...current, paused: false, tutorialOffer: false, feedback: null }));
-  }, [ensureAudio]);
-
-  const acceptTutorialOffer = useCallback(() => {
-    ensureAudio(musicTheme.current);
-    setState((current) => ({
-      ...current,
-      paused: false,
-      tutorialOffer: false,
-      tutorial: "swipe",
-      feedback: null,
-    }));
-  }, [ensureAudio]);
-
-  const declineTutorialOffer = useCallback(() => {
-    ensureAudio(musicTheme.current);
-    setState((current) => ({ ...current, paused: false, tutorialOffer: false, feedback: null }));
+    setState((current) => ({ ...current, paused: false, feedback: null }));
   }, [ensureAudio]);
 
   const cycleSoundLevel = useCallback(() => {
@@ -202,27 +170,25 @@ export function useGame() {
       const gridSize = current.enemy.isBoss ? 4 : 3;
 
       if (!correct) {
-        return withStrugglePause({
+        return {
           ...current,
-          fightStats: { ...current.fightStats, misses: current.fightStats.misses + 1 },
           puzzle: makeRunPuzzle(gridSize, current.player, current.floor, current.enemy.isBoss),
           feedback: { kind: "miss", message: "MISS", nonce: Date.now() },
-        });
+        };
       }
 
       const nextHp = Math.max(0, current.enemy.hp - current.player.swordDamage);
       const healedPlayer = applyLifesteal(current.player);
 
       if (nextHp > 0) {
-        return withStrugglePause({
+        return {
           ...current,
           enemy: { ...current.enemy, hp: nextHp },
           player: healedPlayer,
-          fightStats: { ...current.fightStats, correctHits: current.fightStats.correctHits + 1 },
           puzzle: makeRunPuzzle(gridSize, healedPlayer, current.floor, current.enemy.isBoss),
           feedback: { kind: "hit", message: "", nonce: Date.now(), amount: current.player.swordDamage },
           tutorial: current.tutorial === "swipe" ? "finish" : current.tutorial,
-        });
+        };
       }
 
       if (current.enemy.isBoss) {
@@ -421,31 +387,14 @@ export function useGame() {
     ensureAudio("fight");
     setState((current) => {
       const tutorialEnding = current.tutorial === "shop";
-      if (tutorialEnding) markTutorialSeen();
-
-      if (tutorialEnding) {
-        const shouldBoss = current.roomsCleared >= MONSTER_ROOMS_BEFORE_BOSS;
-        return {
-          ...current,
-          phase: "floorIntro",
-          tutorial: null,
-          tutorialEnemyHitDone: false,
-          showFloorScroll: false,
-          pendingBossFight: shouldBoss,
-          enemy: null,
-          puzzle: null,
-          doors: [],
-          feedback: null,
-        };
-      }
+      if (tutorialEnding) return makeNewRunState(false);
 
       return startNextFight({ ...current, feedback: null }, makeRunPuzzle);
     });
   }, [ensureAudio, makeRunPuzzle]);
 
   const skipTutorial = useCallback(() => {
-    markTutorialSeen();
-    setState((current) => ({ ...current, tutorial: null }));
+    setState(makeNewRunState(false));
   }, []);
 
   useEffect(() => {
@@ -474,10 +423,6 @@ export function useGame() {
     }, 2_400);
     return () => window.clearTimeout(timer);
   }, [state.tutorial, state.tutorialEnemyHitDone, state.enemy?.name]);
-
-  useEffect(() => {
-    if (state.paused && state.tutorialOffer) pauseAudio(audioContext, music);
-  }, [state.paused, state.tutorialOffer]);
 
   useEffect(() => {
     const onPopState = () => pauseGame();
@@ -571,19 +516,18 @@ export function useGame() {
           };
         }
 
-        return withStrugglePause({
+        return {
           ...current,
           phase: player.hp <= 0 ? "defeat" : current.phase,
           enemy: { ...current.enemy, hp: enemyHp },
           player,
-          fightStats: { ...current.fightStats, hitsTaken: current.fightStats.hitsTaken + 1 },
           feedback: { kind: "enemy", message: "", nonce: Date.now(), amount: damage },
-        });
+        };
       });
     }, getEnemyAttackInterval(state.floor));
 
     return () => window.clearInterval(timer);
-  }, [state.phase, state.enemy?.name, state.paused, state.floor]);
+  }, [state.phase, state.enemy?.name, state.paused, state.floor, state.tutorial]);
 
   return {
     state,
@@ -601,8 +545,19 @@ export function useGame() {
     cycleSoundLevel,
     takeBargain,
     skipTutorial,
-    acceptTutorialOffer,
-    declineTutorialOffer,
+  };
+}
+
+function makeNewRunState(withTutorial: boolean): GameState {
+  return {
+    ...initialState,
+    phase: "floorIntro",
+    player: { ...initialPlayer },
+    tutorial: withTutorial ? "swipe" : null,
+    tutorialEnemyHitDone: false,
+    showFloorScroll: true,
+    floorIntroNonce: Date.now(),
+    pendingBossFight: false,
   };
 }
 
@@ -618,6 +573,7 @@ function beginFightEntry(
       ...current,
       phase: "floorIntro",
       showFloorScroll: true,
+      floorIntroNonce: Date.now(),
       pendingBossFight: false,
       paused: false,
       enemy: null,
@@ -653,7 +609,6 @@ function startSpecificFight(
     puzzle: makeRunPuzzle(isBoss ? 4 : 3, current.player, current.floor, isBoss),
     doors: [],
     frozenUntil: 0,
-    fightStats: emptyFightStats(),
     tutorialEnemyHitDone: false,
     showFloorScroll: false,
     pendingBossFight: false,

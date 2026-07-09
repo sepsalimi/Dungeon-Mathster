@@ -1,6 +1,4 @@
-// First-run tutorial: step order, on-screen copy, forced door layout, and
-// the localStorage flag that keeps it from showing again once finished or skipped.
-import { getTutorialOnNewGame, markTutorialSeenIfNeeded } from "./settings";
+// Tutorial step order, on-screen copy, and forced door layout.
 import type { DoorChoice, EnemyState, TutorialStep } from "./types";
 
 export const tutorialCopy: Record<TutorialStep, { title: string; message: string }> = {
@@ -33,14 +31,6 @@ export const tutorialCopy: Record<TutorialStep, { title: string; message: string
     message: "Buy an upgrade, then Venture Onward. Deeper down, Bargain and Mystery doors await. What they hold is yours to discover.",
   },
 };
-
-export function shouldShowTutorial(): boolean {
-  return getTutorialOnNewGame();
-}
-
-export function markTutorialSeen(): void {
-  markTutorialSeenIfNeeded();
-}
 
 // The first door choice is fixed during the tutorial so the shop is always offered.
 export function makeTutorialDoors(): DoorChoice[] {

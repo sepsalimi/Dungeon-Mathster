@@ -1,17 +1,27 @@
 import { useState } from "react";
-import { getTutorialOnNewGame, setTutorialOnNewGame } from "../game/settings";
+import { disableTutorialPrompt, shouldAskTutorialPrompt } from "../game/settings";
+import { TutorialStartPrompt } from "./TutorialStartPrompt";
 
 interface StartScreenProps {
-  onStart: () => void;
+  onStart: (withTutorial: boolean) => void;
 }
 
 export function StartScreen({ onStart }: StartScreenProps) {
-  const [tutorialOnNewGame, setTutorialOnNewGameState] = useState(getTutorialOnNewGame);
+  const [showTutorialPrompt, setShowTutorialPrompt] = useState(false);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
 
-  const toggleTutorialOnNewGame = () => {
-    const next = !tutorialOnNewGame;
-    setTutorialOnNewGameState(next);
-    setTutorialOnNewGame(next);
+  const startNewRun = () => {
+    if (shouldAskTutorialPrompt()) {
+      setShowTutorialPrompt(true);
+      return;
+    }
+
+    onStart(false);
+  };
+
+  const chooseTutorial = (withTutorial: boolean) => {
+    if (dontAskAgain) disableTutorialPrompt();
+    onStart(withTutorial);
   };
 
   return (
@@ -24,17 +34,18 @@ export function StartScreen({ onStart }: StartScreenProps) {
         <span>Floor 1</span>
         <h1>Dungeon Mathster</h1>
         <p>Swipe number paths, strike monsters, spend gold, and clear the first boss.</p>
-        <button className="primary-action" type="button" onClick={onStart}>
+        <button className="primary-action" type="button" onClick={startNewRun}>
           Start New Run
         </button>
-        <div className="start-settings">
-          <span>Settings</span>
-          <label className="settings-toggle">
-            <input type="checkbox" checked={tutorialOnNewGame} onChange={toggleTutorialOnNewGame} />
-            <span>New game with tutorial</span>
-          </label>
-        </div>
       </div>
+      {showTutorialPrompt && (
+        <TutorialStartPrompt
+          dontAskAgain={dontAskAgain}
+          onChangeDontAskAgain={setDontAskAgain}
+          onAccept={() => chooseTutorial(true)}
+          onDecline={() => chooseTutorial(false)}
+        />
+      )}
     </section>
   );
 }

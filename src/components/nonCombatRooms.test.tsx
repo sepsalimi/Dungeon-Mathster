@@ -34,10 +34,8 @@ const state: GameState = {
   tutorial: null,
   tutorialEnemyHitDone: false,
   showFloorScroll: true,
+  floorIntroNonce: 0,
   pendingBossFight: false,
-  fightStats: { misses: 0, hitsTaken: 0, correctHits: 0 },
-  struggleTutorialOffered: false,
-  tutorialOffer: false,
 };
 
 describe("non-combat rooms", () => {
