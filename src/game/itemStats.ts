@@ -41,8 +41,6 @@ export function getItemStatLine(id: ItemId, player: PlayerState): string | null 
       return player.temporaryHp > 0 ? `${player.temporaryHp} temp HP` : "+25 temp HP per buy";
     case "oracleLens":
       return player.oracleLensChance > 0 ? `${Math.round(player.oracleLensChance * 100)}% glow chance` : null;
-    case "negativeHeart":
-      return player.permutationBonus > 0 ? `+${player.permutationBonus} answer length` : player.negativesUnlocked ? "Negatives unlocked" : null;
     case "glassBlade":
       return player.swordDamage > STARTING_SWORD_DAMAGE ? `Deal ${player.swordDamage} damage` : null;
     case "coinHex":

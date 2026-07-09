@@ -45,15 +45,4 @@ describe("bargain options", () => {
     expect(player.hp).toBe(80);
     expect(message).toContain("Max HP reduced by 20.");
   });
-
-  it("Negative Heart adds a monster answer permutation instead of max HP", () => {
-    const { player, message, item } = applyBargain(makePlayer(), "negativeHeart");
-
-    expect(player.permutationBonus).toBe(1);
-    expect(player.negativesUnlocked).toBe(true);
-    expect(player.maxHp).toBe(100);
-    expect(player.hp).toBe(100);
-    expect(message).toContain("Monster answers grow longer.");
-    expect(item).toBe("negativeHeart");
-  });
 });

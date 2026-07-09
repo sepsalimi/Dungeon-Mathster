@@ -68,11 +68,6 @@ export const itemDefinitions: Record<ItemId, ItemDefinition> = {
     description: "Chance to glow the first answer tile.",
     icon: "eye",
   },
-  negativeHeart: {
-    name: "Negative Heart",
-    description: "Negative numbers enter the grid.",
-    icon: "heart",
-  },
   glassBlade: {
     name: "Glass Blade",
     description: "Sword damage doubles.",

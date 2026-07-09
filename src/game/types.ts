@@ -4,7 +4,6 @@ export type RoomKind = "monster" | "shop" | "boss" | "mystery" | "bargain";
 export type MathOperator = "+" | "-" | "*";
 export type ItemId =
   | "oracleLens"
-  | "negativeHeart"
   | "glassBlade"
   | "coinHex"
   | "lifesteal"
@@ -115,7 +114,7 @@ export interface GameState {
 }
 
 export type ShopUpgradeId = "heal" | "maxHp" | "damageReductionArmor" | "temporaryArmor" | "barbedArmor" | "sword";
-export type BargainId = "oracleLens" | "negativeHeart" | "glassBlade" | "coinHex" | "giantEquation";
+export type BargainId = "oracleLens" | "glassBlade" | "coinHex" | "giantEquation";
 
 export interface ShopUpgrade {
   id: ShopUpgradeId;

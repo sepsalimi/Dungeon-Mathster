@@ -147,7 +147,7 @@ function visitShop(player: PlayerState, floor: number): PlayerState {
 }
 
 function visitBargain(player: PlayerState): PlayerState {
-  const id = getItemCount(player, "negativeHeart") === 0 ? "negativeHeart" : "coinHex";
+  const id = getItemCount(player, "oracleLens") === 0 ? "oracleLens" : "coinHex";
   return applyBargain(player, id).player;
 }
 
