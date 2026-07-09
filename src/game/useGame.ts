@@ -71,6 +71,7 @@ const initialState: GameState = {
 };
 
 const REWARD_TRANSITION_DELAY = 1_550;
+const TUTORIAL_REWARD_TRANSITION_DELAY = 4_400;
 export function useGame() {
   const [state, setState] = useState<GameState>(initialState);
   const [soundLevel, setSoundLevel] = useState<SoundLevel>("loud");
@@ -165,6 +166,12 @@ export function useGame() {
     ensureAudio(musicTheme.current);
     setState((current) => {
       if (current.paused || current.phase !== "combat" || !current.enemy || !current.puzzle) return current;
+      if (current.tutorial === "finish" || current.tutorial === "enemyHit") {
+        return {
+          ...current,
+          feedback: { kind: "blocked", message: "Wait for the enemy to strike your health bar.", nonce: Date.now() },
+        };
+      }
 
       const correct = isCorrectPath(path, current.puzzle.tiles, current.puzzle.target);
       const gridSize = current.enemy.isBoss ? 4 : 3;
@@ -267,7 +274,7 @@ export function useGame() {
             },
           };
         });
-      }, REWARD_TRANSITION_DELAY);
+      }, current.tutorial ? TUTORIAL_REWARD_TRANSITION_DELAY : REWARD_TRANSITION_DELAY);
       return {
         ...current,
         enemy: null,
@@ -365,14 +372,33 @@ export function useGame() {
     if (!upgrade) return;
 
     setState((current) => {
-      if (current.player.gold < getUpgradeCost(current.player, upgrade)) {
+      if (current.tutorial === "shop" && id !== "heal") {
+        return { ...current, feedback: { kind: "blocked", message: "Buy Heal HP first.", nonce: Date.now() } };
+      }
+
+      const cost = getUpgradeCost(current.player, upgrade);
+      if (current.player.gold < cost) {
         return { ...current, feedback: { kind: "blocked", message: "Not enough gold.", nonce: Date.now() } };
       }
 
       const rewardItem = getShopRewardItem(id);
+      const player = applyShopUpgrade(current.player, id);
+      if (current.tutorial === "shop" && id === "heal") {
+        return {
+          ...current,
+          tutorial: "healthBought",
+          player,
+          feedback: {
+            kind: "buy",
+            message: `Heal HP purchased: -${cost}g. HP ${current.player.hp}/${current.player.maxHp} -> ${player.hp}/${player.maxHp}.`,
+            nonce: Date.now(),
+          },
+        };
+      }
+
       return {
         ...current,
-        player: applyShopUpgrade(current.player, id),
+        player,
         feedback: {
           kind: "buy",
           message: `${upgrade.name} purchased.`,
@@ -386,7 +412,11 @@ export function useGame() {
   const leaveShop = useCallback(() => {
     ensureAudio("fight");
     setState((current) => {
-      const tutorialEnding = current.tutorial === "shop";
+      if (current.tutorial === "shop") {
+        return { ...current, feedback: { kind: "blocked", message: "Buy Heal HP first.", nonce: Date.now() } };
+      }
+
+      const tutorialEnding = current.tutorial === "healthBought";
       if (tutorialEnding) return makeNewRunState(false);
 
       return startNextFight({ ...current, feedback: null }, makeRunPuzzle);
