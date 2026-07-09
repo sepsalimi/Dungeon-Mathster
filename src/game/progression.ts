@@ -111,6 +111,11 @@ export const itemDefinitions: Record<ItemId, ItemDefinition> = {
     description: "Monsters drop 8 extra gold.",
     icon: "coin",
   },
+  longEquation: {
+    name: "Long Equation",
+    description: "Future answers need one extra number.",
+    icon: "sigma",
+  },
 };
 
 export function getBossDefinition(floor: number): BossDefinition {
@@ -129,10 +134,10 @@ export function getFloorOperators(floor: number): MathOperator[] {
   return ["+"];
 }
 
-export function getRoomPathLength(size: number, floor: number, isBoss: boolean): number | undefined {
-  if (isBoss) return pickBossPathLength(floor);
-  if (size === 3 && floor >= 3) return 5;
-  return undefined;
+export function getRoomPathLength(size: number, floor: number, isBoss: boolean): number {
+  const maxNumberCount = size === 3 ? 3 : 4;
+  const baseNumberCount = isBoss ? pickBossNumberCount(floor) : pickRoomNumberCount(floor);
+  return Math.min(maxNumberCount, baseNumberCount) * 2 - 1;
 }
 
 export function getBossReward(floor: number): number {
@@ -187,14 +192,27 @@ export function getItemStacks(player: PlayerState): Array<{ id: ItemId; count: n
     .filter((item) => item.count > 0);
 }
 
-function pickBossPathLength(floor: number): number {
+export function addPermutationBonus(pathLength: number, size: number, bonus: number): number {
+  const maxNumberCount = size === 3 ? 3 : 4;
+  const numberCount = Math.min(maxNumberCount, Math.floor((pathLength + 1) / 2) + bonus);
+  return numberCount * 2 - 1;
+}
+
+function pickRoomNumberCount(floor: number): number {
+  const roll = Math.random();
+  if (floor === 1) return roll < 0.65 ? 2 : 3;
+  if (floor === 2) return roll < 0.45 ? 2 : 3;
+  return roll < 0.18 ? 2 : 3;
+}
+
+function pickBossNumberCount(floor: number): number {
   const roll = Math.random();
   if (floor < 3) {
-    if (roll < 0.55) return 3;
-    if (roll < 0.9) return 5;
-    return 7;
+    if (roll < 0.35) return 2;
+    if (roll < 0.8) return 3;
+    return 4;
   }
-  if (roll < 0.25) return 3;
-  if (roll < 0.72) return 5;
-  return 7;
+  if (roll < 0.18) return 2;
+  if (roll < 0.58) return 3;
+  return 4;
 }

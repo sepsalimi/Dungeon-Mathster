@@ -13,7 +13,8 @@ export type ItemId =
   | "barbedArmor"
   | "sword"
   | "maxHp"
-  | "goldBonus";
+  | "goldBonus"
+  | "longEquation";
 export type GamePhase =
   | "start"
   | "combat"
@@ -52,6 +53,7 @@ export interface PlayerState {
   negativesUnlocked: boolean;
   extraDamageTaken: number;
   lifesteal: number;
+  permutationBonus: number;
   items: Partial<Record<ItemId, number>>;
 }
 
@@ -92,7 +94,7 @@ export interface GameState {
 }
 
 export type ShopUpgradeId = "heal" | "maxHp" | "damageReductionArmor" | "temporaryArmor" | "barbedArmor" | "sword";
-export type BargainId = "oracleLens" | "negativeHeart" | "glassBlade" | "coinHex";
+export type BargainId = "oracleLens" | "negativeHeart" | "glassBlade" | "coinHex" | "giantEquation";
 
 export interface ShopUpgrade {
   id: ShopUpgradeId;

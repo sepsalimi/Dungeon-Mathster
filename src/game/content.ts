@@ -49,6 +49,12 @@ export const bargainOptions: BargainOption[] = [
     upside: "Heads: gain 1 sword damage.",
     downside: "Tails: monsters deal 2 extra damage.",
   },
+  {
+    id: "giantEquation",
+    name: "Giant Equation",
+    upside: "Gain 2 sword damage and 40 max HP.",
+    downside: "Future answers need 1 extra number when the grid can fit it.",
+  },
 ];
 
 export function makeEnemy(isBoss: boolean, floor: number): EnemyState {

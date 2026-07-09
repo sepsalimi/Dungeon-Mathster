@@ -11,6 +11,7 @@ import { isCorrectPath, makePuzzle } from "./math";
 import {
   STARTING_MAX_HP,
   addItem,
+  addPermutationBonus,
   applyBossItem,
   getBossReward,
   getFloorOperators,
@@ -31,6 +32,7 @@ const initialPlayer: PlayerState = {
   negativesUnlocked: false,
   extraDamageTaken: 0,
   lifesteal: 0,
+  permutationBonus: 0,
   items: {},
 };
 
@@ -76,10 +78,11 @@ export function useGame() {
   const musicTheme = useRef<MusicTheme>("fight");
 
   const makeRunPuzzle = useCallback((size: number, player: PlayerState, floor: number, isBoss = false) => {
+    const pathLength = getRoomPathLength(size, floor, isBoss);
     return makePuzzle(size, {
       allowNegative: player.negativesUnlocked,
       operators: getFloorOperators(floor),
-      pathLength: getRoomPathLength(size, floor, isBoss),
+      pathLength: addPermutationBonus(pathLength, size, player.permutationBonus),
     });
   }, []);
 
@@ -99,9 +102,9 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       phase: "combat",
       player: { ...initialPlayer },
       enemy: makeEnemy(false, 1),
-      puzzle: makePuzzle(3, { operators: getFloorOperators(1) }),
+      puzzle: makeRunPuzzle(3, initialPlayer, 1),
     });
-  }, [ensureAudio]);
+  }, [ensureAudio, makeRunPuzzle]);
 
   const pauseGame = useCallback(() => {
     setState((current) => {
@@ -243,14 +246,15 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     if (door.kind === "mystery") {
       setState((current) => ({
         ...current,
+        doors: [],
         player: {
           ...current.player,
           hp: Math.min(current.player.maxHp, current.player.hp + 20),
           gold: current.player.gold + 5,
         },
-        feedback: { kind: "buy", message: "Mystery room: +20 HP and +5 gold.", nonce: Date.now() },
+        feedback: { kind: "buy", message: "Mystery reward: +20 HP and +5 gold.", nonce: Date.now() },
       }));
-      window.setTimeout(() => setState((current) => startNextFight(current, makeRunPuzzle)), 850);
+      window.setTimeout(() => setState((current) => startNextFight(current, makeRunPuzzle)), 1_800);
       return;
     }
 
@@ -293,6 +297,14 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
           player.extraDamageTaken += 2;
           message = "Coin Hex: tails. Monsters hit harder.";
         }
+      }
+      if (id === "giantEquation") {
+        player = addItem(player, "longEquation");
+        player.maxHp += 40;
+        player.hp = Math.min(player.maxHp, player.hp + 40);
+        player.swordDamage += 2;
+        player.permutationBonus += 1;
+        message = "Giant Equation taken. More power, longer answers.";
       }
 
       return startNextFight({ ...current, player, feedback: { kind: "buy", message, nonce: Date.now() } }, makeRunPuzzle);
@@ -551,8 +563,8 @@ function playFeedback(
   }
   if (feedback.kind === "miss") playTone(context, 260, 0.02, 0.13, "sine", 0.045 * volumeMultiplier);
   if (feedback.kind === "enemy") {
-    playTone(context, 72, 0.06, 0.16, "sawtooth", 0.11 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 55, 0.04, 0.1, "square", 0.08 * volumeMultiplier), 55);
+    playTone(context, 196, 0.004, 0.075, "triangle", 0.08 * volumeMultiplier);
+    window.setTimeout(() => playTone(context, 147, 0.006, 0.09, "sine", 0.055 * volumeMultiplier), 42);
   }
   if (feedback.kind === "buy") {
     playTone(context, 660, 0.02, 0.08, "triangle", 0.09 * volumeMultiplier);

@@ -1,6 +1,7 @@
 import { bargainOptions } from "../game/content";
 import type { BargainId, GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
+import { PlayerVitals } from "./PlayerVitals";
 
 interface BargainViewProps {
   state: GameState;
@@ -17,6 +18,7 @@ export function BargainView({ state, soundLevel, onPause, onCycleSoundLevel, onT
       <section className="bargain-room" aria-label="Cursed bargain room">
         <div className="altar-sprite" aria-hidden="true"><span /></div>
         <div className="bargain-copy"><span>Cursed Altar</span><h1>Power Has a Price</h1></div>
+        <PlayerVitals player={state.player} />
         <div className="bargain-list">
           {bargainOptions.map((option) => (
             <button key={option.id} type="button" className="bargain-card" onClick={() => onTakeBargain(option.id)}>

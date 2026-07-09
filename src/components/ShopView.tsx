@@ -1,6 +1,7 @@
 import { shopUpgrades } from "../game/content";
 import type { GameState, ShopUpgradeId, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
+import { PlayerVitals } from "./PlayerVitals";
 
 interface ShopViewProps {
   state: GameState;
@@ -20,6 +21,7 @@ export function ShopView({ state, soundLevel, onPause, onCycleSoundLevel, onBuyU
           <div className="merchant-sprite"><span /></div>
           <div><span className="eyebrow">Torch Shop</span><h1>Spend Gold</h1></div>
         </div>
+        <PlayerVitals player={state.player} />
         <div className="upgrade-list">
           {shopUpgrades.map((upgrade) => {
             const affordable = state.player.gold >= upgrade.cost;
