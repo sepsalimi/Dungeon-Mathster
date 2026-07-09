@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { GameState, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 import { MathGrid } from "./MathGrid";
+import { RewardCue } from "./RewardCue";
 import { RoomScene } from "./RoomScene";
 
 interface CombatViewProps {
@@ -24,6 +25,7 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
   return (
     <div className={["game-screen", lowHealth ? "game-screen--danger" : "", hurtNonce ? "game-screen--hurt" : ""].filter(Boolean).join(" ")}>
       <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
+      <RewardCue feedback={state.feedback} />
       <RoomScene enemy={state.enemy} feedback={state.feedback} lowHealth={lowHealth} frozen={frozen} />
       {state.puzzle && (
         <MathGrid player={state.player} puzzle={state.puzzle} startHintId={startHintId} onSubmitPath={onSubmitPath} />

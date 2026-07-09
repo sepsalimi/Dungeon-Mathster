@@ -1635,6 +1635,140 @@ p {
   clip-path: polygon(0 0, 100% 0, 100% 18%, 34% 18%, 70% 50%, 34% 82%, 100% 82%, 100% 100%, 0 100%, 48% 50%);
 }
 
+.reward-cues {
+  position: absolute;
+  inset: 0;
+  z-index: 36;
+  pointer-events: none;
+}
+
+.reward-cue {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.reward-cue strong {
+  position: absolute;
+  left: 50%;
+  top: 32%;
+  color: #fff5d8;
+  font-size: clamp(1.35rem, 7vw, 2.3rem);
+  font-weight: 1000;
+  text-shadow: 0 3px 0 #3d2414, 0 0 18px rgba(243, 189, 52, 0.7);
+  transform: translateX(-50%);
+  animation: reward-label-pop 1.25s ease-out forwards;
+}
+
+.coin-burst {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 1rem;
+  height: 1rem;
+}
+
+.coin-burst span {
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  background: radial-gradient(circle at 35% 30%, #fff0a8 0 18%, #f3bd34 19% 74%, #9a5a1f 75% 100%);
+  border: 2px solid #6d3f16;
+  border-radius: 50%;
+  box-shadow: 0 2px 0 #3d2414, 0 0 15px rgba(243, 189, 52, 0.45);
+  animation: coin-fly-to-hud 1.05s cubic-bezier(0.18, 0.86, 0.22, 1) forwards;
+}
+
+.coin-burst span:nth-child(1) { --coin-x: -8.5rem; --coin-y: -15rem; animation-delay: 0ms; }
+.coin-burst span:nth-child(2) { --coin-x: -7rem; --coin-y: -13.6rem; animation-delay: 55ms; }
+.coin-burst span:nth-child(3) { --coin-x: -9.4rem; --coin-y: -12.8rem; animation-delay: 110ms; }
+.coin-burst span:nth-child(4) { --coin-x: -6.2rem; --coin-y: -15.4rem; animation-delay: 165ms; }
+.coin-burst span:nth-child(5) { --coin-x: -8rem; --coin-y: -11.9rem; animation-delay: 220ms; }
+
+.reward-chest {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 4.6rem;
+  height: 3.2rem;
+  background:
+    linear-gradient(90deg, transparent 0 42%, #f0d88d 42% 58%, transparent 58%),
+    linear-gradient(180deg, #9b5d3d 0 45%, #593526 45% 100%);
+  border: 4px solid #15121d;
+  box-shadow: 0 6px 0 #050407, 0 0 26px rgba(240, 216, 141, 0.35);
+  transform: translate(-50%, -50%);
+  animation: chest-pop 1.28s ease-out forwards;
+}
+
+.reward-chest span {
+  position: absolute;
+  left: -0.25rem;
+  right: -0.25rem;
+  top: -1.45rem;
+  height: 1.45rem;
+  background: #7c4d31;
+  border: 4px solid #15121d;
+  transform-origin: bottom left;
+  animation: chest-lid-open 1.28s ease-out forwards;
+}
+
+.reward-item-flight {
+  position: absolute;
+  left: 50%;
+  top: 39%;
+  width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  background: #15121d;
+  border: 2px solid rgba(245, 239, 224, 0.28);
+  box-shadow: 0 4px 0 #050407, 0 0 20px rgba(191, 249, 255, 0.55);
+  transform: translate(-50%, -50%);
+  animation: item-fly-to-hud 1.25s cubic-bezier(0.18, 0.86, 0.22, 1) forwards;
+}
+
+.reward-item-flight .item-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.reward-cue--item strong {
+  top: 55%;
+  color: #bff9ff;
+  font-size: clamp(0.9rem, 4.8vw, 1.3rem);
+  text-shadow: 0 2px 0 #071115, 0 0 16px rgba(191, 249, 255, 0.6);
+}
+
+@keyframes reward-label-pop {
+  0% { opacity: 0; transform: translate(-50%, 0.8rem) scale(0.78); }
+  18%, 72% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -1.1rem) scale(1.04); }
+}
+
+@keyframes coin-fly-to-hud {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.55); }
+  18% { opacity: 1; transform: translate(-50%, calc(-50% + 1.8rem)) scale(1.1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--coin-x)), calc(-50% + var(--coin-y))) scale(0.42); }
+}
+
+@keyframes chest-pop {
+  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.72); }
+  16%, 78% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -56%) scale(0.94); }
+}
+
+@keyframes chest-lid-open {
+  0%, 20% { transform: rotate(0deg); }
+  38%, 100% { transform: rotate(-28deg); }
+}
+
+@keyframes item-fly-to-hud {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.62); }
+  22% { opacity: 1; transform: translate(-50%, -4.5rem) scale(1.12); }
+  100% { opacity: 0; transform: translate(calc(-50% - 8.2rem), calc(-50% - 15rem)) scale(0.36); }
+}
+
 .hud-button {
   width: 2.45rem;
   height: 2.35rem;

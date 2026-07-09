@@ -17,7 +17,7 @@ import {
   getFloorOperators,
   getRoomPathLength,
 } from "./progression";
-import type { BargainId, DoorChoice, FeedbackState, GameState, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
+import type { BargainId, DoorChoice, FeedbackState, GameState, ItemId, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
 
 const initialPlayer: PlayerState = {
   hp: 120,
@@ -192,6 +192,10 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
             kind: "buy",
             message: `${bossReward.message} Floor ${nextFloor} opens. +${bossGold} gold.`,
             nonce: Date.now(),
+            rewards: [
+              { kind: "gold", amount: bossGold },
+              { kind: "item", itemId: bossReward.item },
+            ],
           },
         };
       }
@@ -211,6 +215,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
           message: `Monster defeated. +${reward} gold.`,
           nonce: Date.now(),
           amount: current.player.swordDamage,
+          rewards: [{ kind: "gold", amount: reward }],
         },
       };
     });
@@ -252,9 +257,14 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
           hp: Math.min(current.player.maxHp, current.player.hp + 20),
           gold: current.player.gold + 5,
         },
-        feedback: { kind: "buy", message: "Mystery reward: +20 HP and +5 gold.", nonce: Date.now() },
+        feedback: {
+          kind: "buy",
+          message: "Mystery reward: +20 HP and +5 gold.",
+          nonce: Date.now(),
+          rewards: [{ kind: "gold", amount: 5 }],
+        },
       }));
-      window.setTimeout(() => setState((current) => startNextFight(current, makeRunPuzzle)), 1_800);
+      window.setTimeout(() => setState((current) => startNextFight({ ...current, feedback: null }, makeRunPuzzle)), 1_800);
       return;
     }
 
@@ -266,9 +276,11 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     setState((current) => {
       let player = { ...current.player };
       let message = bargainOptions.find((option) => option.id === id)?.name ?? "Bargain taken";
+      let rewardItem: ItemId | null = null;
 
       if (id === "oracleLens") {
         player = addItem(player, "oracleLens");
+        rewardItem = "oracleLens";
         player.oracleLensChance = Math.min(0.8, player.oracleLensChance + 0.22);
         player.maxHp = Math.max(1, player.maxHp - 20);
         player.hp = Math.min(player.hp, player.maxHp);
@@ -276,6 +288,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       }
       if (id === "negativeHeart") {
         player = addItem(player, "negativeHeart");
+        rewardItem = "negativeHeart";
         player.maxHp += 30;
         player.hp = Math.min(player.maxHp, player.hp + 30);
         player.negativesUnlocked = true;
@@ -283,6 +296,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       }
       if (id === "glassBlade") {
         player = addItem(player, "glassBlade");
+        rewardItem = "glassBlade";
         player.swordDamage = Math.max(1, player.swordDamage * 2);
         player.maxHp = Math.max(1, Math.floor(player.maxHp / 2));
         player.hp = Math.min(player.hp, player.maxHp);
@@ -290,6 +304,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       }
       if (id === "coinHex") {
         player = addItem(player, "coinHex");
+        rewardItem = "coinHex";
         if (Math.random() < 0.5) {
           player.swordDamage += 1;
           message = "Coin Hex: heads. Sword damage increased.";
@@ -300,6 +315,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       }
       if (id === "giantEquation") {
         player = addItem(player, "longEquation");
+        rewardItem = "longEquation";
         player.maxHp += 40;
         player.hp = Math.min(player.maxHp, player.hp + 40);
         player.swordDamage += 2;
@@ -307,7 +323,19 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         message = "Giant Equation taken. More power, longer answers.";
       }
 
-      return startNextFight({ ...current, player, feedback: { kind: "buy", message, nonce: Date.now() } }, makeRunPuzzle);
+      return startNextFight(
+        {
+          ...current,
+          player,
+          feedback: {
+            kind: "buy",
+            message,
+            nonce: Date.now(),
+            rewards: rewardItem ? [{ kind: "item", itemId: rewardItem }] : undefined,
+          },
+        },
+        makeRunPuzzle,
+      );
     });
   }, [ensureAudio, makeRunPuzzle]);
 
@@ -322,6 +350,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       }
 
       const player = { ...current.player, gold: current.player.gold - upgrade.cost };
+      const rewardItem = getShopRewardItem(id);
       if (id === "heal") player.hp = Math.min(player.maxHp, player.hp + 35);
       if (id === "maxHp") {
         Object.assign(player, addItem(player, "maxHp"));
@@ -345,13 +374,22 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         player.swordDamage += 1;
       }
 
-      return { ...current, player, feedback: { kind: "buy", message: `${upgrade.name} purchased.`, nonce: Date.now() } };
+      return {
+        ...current,
+        player,
+        feedback: {
+          kind: "buy",
+          message: `${upgrade.name} purchased.`,
+          nonce: Date.now(),
+          rewards: rewardItem ? [{ kind: "item", itemId: rewardItem }] : undefined,
+        },
+      };
     });
   }, [ensureAudio]);
 
   const leaveShop = useCallback(() => {
     ensureAudio("fight");
-    setState((current) => startNextFight(current, makeRunPuzzle));
+    setState((current) => startNextFight({ ...current, feedback: null }, makeRunPuzzle));
   }, [ensureAudio, makeRunPuzzle]);
 
   useEffect(() => {
@@ -411,6 +449,10 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
                 kind: "buy",
                 message: `Barbed Armor defeated the boss. ${bossReward.message} Floor ${nextFloor} opens.`,
                 nonce: Date.now(),
+                rewards: [
+                  { kind: "gold", amount: bossGold },
+                  { kind: "item", itemId: bossReward.item },
+                ],
               },
             };
           }
@@ -429,6 +471,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
               kind: "buy",
               message: `Barbed Armor defeated the monster. +${reward} gold.`,
               nonce: Date.now(),
+              rewards: [{ kind: "gold", amount: reward }],
             },
           };
         }
@@ -483,8 +526,21 @@ function startSpecificFight(
     puzzle: makeRunPuzzle(isBoss ? 4 : 3, current.player, current.floor, isBoss),
     doors: [],
     frozenUntil: 0,
-    feedback: isBoss ? { kind: "blocked", message: "The boss waits behind the iron sum gate.", nonce: Date.now() } : null,
+    feedback: isBoss
+      ? { kind: "blocked", message: "The boss waits behind the iron sum gate.", nonce: Date.now() }
+      : current.feedback?.kind === "hit"
+        ? null
+        : current.feedback,
   };
+}
+
+function getShopRewardItem(id: ShopUpgradeId): ItemId | null {
+  if (id === "heal") return null;
+  if (id === "maxHp") return "maxHp";
+  if (id === "damageReductionArmor") return "damageReductionArmor";
+  if (id === "temporaryArmor") return "temporaryArmor";
+  if (id === "barbedArmor") return "barbedArmor";
+  return "sword";
 }
 
 function applyLifesteal(player: PlayerState): PlayerState {

@@ -2,6 +2,7 @@ import { shopUpgrades } from "../game/content";
 import type { GameState, ShopUpgradeId, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
 import { PlayerVitals } from "./PlayerVitals";
+import { RewardCue } from "./RewardCue";
 
 interface ShopViewProps {
   state: GameState;
@@ -16,6 +17,7 @@ export function ShopView({ state, soundLevel, onPause, onCycleSoundLevel, onBuyU
   return (
     <div className="game-screen">
       <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
+      <RewardCue feedback={state.feedback} />
       <section className="shop-room" aria-label="Dungeon shop">
         <div className="merchant">
           <div className="merchant-sprite"><span /></div>
