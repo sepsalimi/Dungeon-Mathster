@@ -57,6 +57,7 @@ interface MusicState {
 type MusicTheme = "fight" | "boss" | "door" | "shop" | "bargain";
 
 const soundLevelOrder: SoundLevel[] = ["loud", "mute", "low"];
+const REWARD_TRANSITION_DELAY = 1_550;
 
 function nextSoundLevel(current: SoundLevel): SoundLevel {
   const index = soundLevelOrder.indexOf(current);
@@ -179,19 +180,36 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         const bossGold = getBossReward(current.floor);
         const bossReward = applyBossItem({ ...healedPlayer, gold: healedPlayer.gold + bossGold }, current.floor);
         const nextFloor = current.floor + 1;
+        const nonce = Date.now();
+        window.setTimeout(() => {
+          setState((scheduled) => {
+            if (scheduled.feedback?.nonce !== nonce) return scheduled;
+            return {
+              ...scheduled,
+              phase: "door",
+              floor: nextFloor,
+              roomsCleared: 0,
+              enemy: null,
+              puzzle: null,
+              doors: makeDoorChoices(0),
+              feedback: {
+                kind: "buy",
+                message: `${bossReward.message} Floor ${nextFloor} opens. +${bossGold} gold.`,
+                nonce: Date.now(),
+              },
+            };
+          });
+        }, REWARD_TRANSITION_DELAY);
         return {
           ...current,
-          phase: "door",
-          floor: nextFloor,
-          roomsCleared: 0,
-          enemy: { ...current.enemy, hp: 0 },
+          enemy: null,
           puzzle: null,
-          doors: makeDoorChoices(0),
+          doors: [],
           player: bossReward.player,
           feedback: {
             kind: "buy",
             message: `${bossReward.message} Floor ${nextFloor} opens. +${bossGold} gold.`,
-            nonce: Date.now(),
+            nonce,
             rewards: [
               { kind: "gold", amount: bossGold },
               { kind: "item", itemId: bossReward.item },
@@ -202,18 +220,35 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
 
       const roomsCleared = current.roomsCleared + 1;
       const reward = MONSTER_REWARD + healedPlayer.goldBonus;
+      const nonce = Date.now();
+      window.setTimeout(() => {
+        setState((scheduled) => {
+          if (scheduled.feedback?.nonce !== nonce) return scheduled;
+          return {
+            ...scheduled,
+            phase: "door",
+            roomsCleared,
+            enemy: null,
+            puzzle: null,
+            doors: makeDoorChoices(roomsCleared),
+            feedback: {
+              kind: "buy",
+              message: `Monster defeated. +${reward} gold.`,
+              nonce: Date.now(),
+            },
+          };
+        });
+      }, REWARD_TRANSITION_DELAY);
       return {
         ...current,
-        phase: "door",
-        roomsCleared,
-        enemy: { ...current.enemy, hp: 0 },
+        enemy: null,
         puzzle: null,
-        doors: makeDoorChoices(roomsCleared),
+        doors: [],
         player: { ...healedPlayer, gold: healedPlayer.gold + reward },
         feedback: {
           kind: "hit",
           message: `Monster defeated. +${reward} gold.`,
-          nonce: Date.now(),
+          nonce,
           amount: current.player.swordDamage,
           rewards: [{ kind: "gold", amount: reward }],
         },
@@ -613,6 +648,17 @@ function playFeedback(
   const volumeMultiplier = getVolumeMultiplier(soundLevelRef.current);
   if (!context || context.state !== "running" || volumeMultiplier === 0) return;
 
+  if (feedback.rewards?.some((reward) => reward.kind === "gold")) {
+    playTone(context, 740, 0.006, 0.08, "triangle", 0.1 * volumeMultiplier);
+    window.setTimeout(() => playTone(context, 980, 0.006, 0.075, "triangle", 0.09 * volumeMultiplier), 58);
+    window.setTimeout(() => playTone(context, 1240, 0.006, 0.09, "sine", 0.075 * volumeMultiplier), 116);
+  }
+  if (feedback.rewards?.some((reward) => reward.kind === "item")) {
+    playTone(context, 220, 0.004, 0.055, "square", 0.07 * volumeMultiplier);
+    window.setTimeout(() => playTone(context, 660, 0.008, 0.11, "triangle", 0.105 * volumeMultiplier), 74);
+    window.setTimeout(() => playTone(context, 990, 0.008, 0.13, "sine", 0.09 * volumeMultiplier), 146);
+  }
+
   if (feedback.kind === "hit") {
     playTone(context, 960, 0.004, 0.055, "square", 0.13 * volumeMultiplier);
     window.setTimeout(() => playTone(context, 420, 0.006, 0.08, "sawtooth", 0.08 * volumeMultiplier), 32);
@@ -622,7 +668,7 @@ function playFeedback(
     playTone(context, 196, 0.004, 0.075, "triangle", 0.08 * volumeMultiplier);
     window.setTimeout(() => playTone(context, 147, 0.006, 0.09, "sine", 0.055 * volumeMultiplier), 42);
   }
-  if (feedback.kind === "buy") {
+  if (feedback.kind === "buy" && !feedback.rewards?.length) {
     playTone(context, 660, 0.02, 0.08, "triangle", 0.09 * volumeMultiplier);
     window.setTimeout(() => playTone(context, 880, 0.02, 0.08, "triangle", 0.08 * volumeMultiplier), 70);
   }

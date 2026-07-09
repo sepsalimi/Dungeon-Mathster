@@ -10,6 +10,7 @@ describe("RewardCue", () => {
     );
 
     expect(html).toContain("coin-burst");
+    expect(html.match(/<span><\/span>/g)?.length).toBe(9);
     expect(html).toContain("+18g");
   });
 

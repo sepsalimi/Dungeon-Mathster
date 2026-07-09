@@ -1652,39 +1652,43 @@ p {
 .reward-cue strong {
   position: absolute;
   left: 50%;
-  top: 32%;
+  top: 29%;
   color: #fff5d8;
-  font-size: clamp(1.35rem, 7vw, 2.3rem);
+  font-size: clamp(2.1rem, 12vw, 4rem);
   font-weight: 1000;
-  text-shadow: 0 3px 0 #3d2414, 0 0 18px rgba(243, 189, 52, 0.7);
+  text-shadow: 0 5px 0 #3d2414, 0 0 28px rgba(243, 189, 52, 0.95);
   transform: translateX(-50%);
-  animation: reward-label-pop 1.25s ease-out forwards;
+  animation: reward-label-pop 1.65s ease-out forwards;
 }
 
 .coin-burst {
   position: absolute;
   left: 50%;
   top: 42%;
-  width: 1rem;
-  height: 1rem;
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 .coin-burst span {
   position: absolute;
-  width: 1rem;
-  height: 1rem;
+  width: 1.55rem;
+  height: 1.55rem;
   background: radial-gradient(circle at 35% 30%, #fff0a8 0 18%, #f3bd34 19% 74%, #9a5a1f 75% 100%);
-  border: 2px solid #6d3f16;
+  border: 3px solid #6d3f16;
   border-radius: 50%;
-  box-shadow: 0 2px 0 #3d2414, 0 0 15px rgba(243, 189, 52, 0.45);
-  animation: coin-fly-to-hud 1.05s cubic-bezier(0.18, 0.86, 0.22, 1) forwards;
+  box-shadow: 0 4px 0 #3d2414, 0 0 24px rgba(243, 189, 52, 0.72);
+  animation: coin-fly-to-hud 1.45s cubic-bezier(0.18, 0.86, 0.22, 1) forwards;
 }
 
-.coin-burst span:nth-child(1) { --coin-x: -8.5rem; --coin-y: -15rem; animation-delay: 0ms; }
-.coin-burst span:nth-child(2) { --coin-x: -7rem; --coin-y: -13.6rem; animation-delay: 55ms; }
-.coin-burst span:nth-child(3) { --coin-x: -9.4rem; --coin-y: -12.8rem; animation-delay: 110ms; }
-.coin-burst span:nth-child(4) { --coin-x: -6.2rem; --coin-y: -15.4rem; animation-delay: 165ms; }
-.coin-burst span:nth-child(5) { --coin-x: -8rem; --coin-y: -11.9rem; animation-delay: 220ms; }
+.coin-burst span:nth-child(1) { --coin-x: -8.5rem; --coin-y: -15rem; --burst-x: -3.4rem; --burst-y: -3.1rem; animation-delay: 0ms; }
+.coin-burst span:nth-child(2) { --coin-x: -7rem; --coin-y: -13.6rem; --burst-x: 2.8rem; --burst-y: -3.6rem; animation-delay: 45ms; }
+.coin-burst span:nth-child(3) { --coin-x: -9.4rem; --coin-y: -12.8rem; --burst-x: -4.5rem; --burst-y: 0.2rem; animation-delay: 90ms; }
+.coin-burst span:nth-child(4) { --coin-x: -6.2rem; --coin-y: -15.4rem; --burst-x: 4.1rem; --burst-y: 0.4rem; animation-delay: 135ms; }
+.coin-burst span:nth-child(5) { --coin-x: -8rem; --coin-y: -11.9rem; --burst-x: -1rem; --burst-y: 3.4rem; animation-delay: 180ms; }
+.coin-burst span:nth-child(6) { --coin-x: -5.5rem; --coin-y: -12.6rem; --burst-x: 1.6rem; --burst-y: 3.2rem; animation-delay: 225ms; }
+.coin-burst span:nth-child(7) { --coin-x: -10rem; --coin-y: -14.4rem; --burst-x: -5.4rem; --burst-y: -2rem; animation-delay: 270ms; }
+.coin-burst span:nth-child(8) { --coin-x: -6.8rem; --coin-y: -16rem; --burst-x: 5.3rem; --burst-y: -2rem; animation-delay: 315ms; }
+.coin-burst span:nth-child(9) { --coin-x: -8.9rem; --coin-y: -13.8rem; --burst-x: 0; --burst-y: -5rem; animation-delay: 360ms; }
 
 .reward-chest {
   position: absolute;
@@ -1742,13 +1746,14 @@ p {
 
 @keyframes reward-label-pop {
   0% { opacity: 0; transform: translate(-50%, 0.8rem) scale(0.78); }
-  18%, 72% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -1.1rem) scale(1.04); }
+  15%, 78% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -1.4rem) scale(1.04); }
 }
 
 @keyframes coin-fly-to-hud {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.55); }
-  18% { opacity: 1; transform: translate(-50%, calc(-50% + 1.8rem)) scale(1.1); }
+  20% { opacity: 1; transform: translate(calc(-50% + var(--burst-x)), calc(-50% + var(--burst-y))) scale(1.22); }
+  58% { opacity: 1; transform: translate(calc(-50% + var(--burst-x)), calc(-50% + var(--burst-y))) scale(1); }
   100% { opacity: 0; transform: translate(calc(-50% + var(--coin-x)), calc(-50% + var(--coin-y))) scale(0.42); }
 }
 

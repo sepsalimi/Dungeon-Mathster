@@ -23,6 +23,10 @@ export function RewardCue({ feedback }: RewardCueProps) {
                 <span />
                 <span />
                 <span />
+                <span />
+                <span />
+                <span />
+                <span />
               </div>
               <strong>+{reward.amount}g</strong>
             </div>
