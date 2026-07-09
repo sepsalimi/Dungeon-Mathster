@@ -118,6 +118,11 @@ export const itemDefinitions: Record<ItemId, ItemDefinition> = {
     description: "Monsters drop 8 extra gold.",
     icon: "coin",
   },
+  longEquation: {
+    name: "Long Equation",
+    description: "Future answers need one extra number.",
+    icon: "sigma",
+  },
 };
 
 export function getBossDefinition(floor: number): BossDefinition {
@@ -135,19 +140,17 @@ export function getFloorOperators(floor: number): MathOperator[] {
   return ["+"];
 }
 
-// Longer 5-tile paths wait until floor 4 so multiplication (floor 3) and path
-// length never spike difficulty on the same floor.
-export function getRoomPathLength(size: number, floor: number, isBoss: boolean): number | undefined {
-  if (isBoss) return pickBossPathLength(floor);
-  if (size === 3 && floor >= 4) return 5;
-  return undefined;
+export function getRoomPathLength(size: number, floor: number, isBoss: boolean): number {
+  const maxNumberCount = size === 3 ? 3 : 4;
+  const baseNumberCount = isBoss ? pickBossNumberCount(floor) : pickRoomNumberCount(floor);
+  return Math.min(maxNumberCount, baseNumberCount) * 2 - 1;
 }
 
 export function getBossReward(floor: number): number {
   return 45 + floor * 15;
 }
 
-export function applyBossItem(player: PlayerState, floor: number): { player: PlayerState; message: string } {
+export function applyBossItem(player: PlayerState, floor: number): { player: PlayerState; message: string; item: ItemId } {
   const item = getBossDefinition(floor).item;
   let rewardedPlayer = addItem(player, item);
 
@@ -167,7 +170,7 @@ export function applyBossItem(player: PlayerState, floor: number): { player: Pla
     rewardedPlayer = { ...rewardedPlayer, swordDamage: rewardedPlayer.swordDamage + 1 };
   }
 
-  return { player: rewardedPlayer, message: `${itemDefinitions[item].name} found.` };
+  return { player: rewardedPlayer, message: `${itemDefinitions[item].name} found.`, item };
 }
 
 export function addItem(player: PlayerState, item: ItemId, amount = 1): PlayerState {
@@ -195,19 +198,27 @@ export function getItemStacks(player: PlayerState): Array<{ id: ItemId; count: n
     .filter((item) => item.count > 0);
 }
 
-// Early bosses stay on short paths so new players are not asked to plan
-// 7-tile swipes before they have learned the grid.
-function pickBossPathLength(floor: number): number {
+export function addPermutationBonus(pathLength: number, size: number, bonus: number): number {
+  const maxNumberCount = size === 3 ? 3 : 4;
+  const numberCount = Math.min(maxNumberCount, Math.floor((pathLength + 1) / 2) + bonus);
+  return numberCount * 2 - 1;
+}
+
+function pickRoomNumberCount(floor: number): number {
+  const roll = Math.random();
+  if (floor === 1) return roll < 0.65 ? 2 : 3;
+  if (floor === 2) return roll < 0.45 ? 2 : 3;
+  return roll < 0.18 ? 2 : 3;
+}
+
+function pickBossNumberCount(floor: number): number {
   const roll = Math.random();
   if (floor < 3) {
-    return roll < 0.65 ? 3 : 5;
+    if (roll < 0.35) return 2;
+    if (roll < 0.8) return 3;
+    return 4;
   }
-  if (floor < 5) {
-    if (roll < 0.35) return 3;
-    if (roll < 0.8) return 5;
-    return 7;
-  }
-  if (roll < 0.25) return 3;
-  if (roll < 0.7) return 5;
-  return 7;
+  if (roll < 0.18) return 2;
+  if (roll < 0.58) return 3;
+  return 4;
 }

@@ -1,6 +1,8 @@
 import { getUpgradeCost, shopUpgrades } from "../game/shop";
 import type { GameState, ShopUpgradeId, SoundLevel } from "../game/types";
 import { Hud } from "./Hud";
+import { PlayerVitals } from "./PlayerVitals";
+import { RewardCue } from "./RewardCue";
 
 interface ShopViewProps {
   state: GameState;
@@ -15,11 +17,16 @@ export function ShopView({ state, soundLevel, onPause, onCycleSoundLevel, onBuyU
   return (
     <div className="game-screen">
       <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
-      <section className="shop-room" aria-label="Dungeon shop">
+      <RewardCue feedback={state.feedback} />
+      <section
+        className={state.tutorial === "shop" ? "shop-room shop-room--tutorial" : "shop-room"}
+        aria-label="Dungeon shop"
+      >
         <div className="merchant">
           <div className="merchant-sprite"><span /></div>
           <div><span className="eyebrow">Torch Shop</span><h1>Spend Gold</h1></div>
         </div>
+        <PlayerVitals player={state.player} />
         <div className="upgrade-list">
           {shopUpgrades.map((upgrade) => {
             const cost = getUpgradeCost(state.player, upgrade);

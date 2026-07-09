@@ -13,7 +13,9 @@ export type ItemId =
   | "barbedArmor"
   | "sword"
   | "maxHp"
-  | "goldBonus";
+  | "goldBonus"
+  | "longEquation";
+export type TutorialStep = "swipe" | "finish" | "door" | "shop";
 export type GamePhase =
   | "start"
   | "combat"
@@ -52,6 +54,7 @@ export interface PlayerState {
   negativesUnlocked: boolean;
   extraDamageTaken: number;
   lifesteal: number;
+  permutationBonus: number;
   items: Partial<Record<ItemId, number>>;
 }
 
@@ -76,7 +79,12 @@ export interface FeedbackState {
   message: string;
   nonce: number;
   amount?: number;
+  rewards?: RewardCue[];
 }
+
+export type RewardCue =
+  | { kind: "gold"; amount: number }
+  | { kind: "item"; itemId: ItemId };
 
 export interface GameState {
   phase: GamePhase;
@@ -89,10 +97,11 @@ export interface GameState {
   feedback: FeedbackState | null;
   frozenUntil: number;
   paused: boolean;
+  tutorial: TutorialStep | null;
 }
 
 export type ShopUpgradeId = "heal" | "maxHp" | "damageReductionArmor" | "temporaryArmor" | "barbedArmor" | "sword";
-export type BargainId = "oracleLens" | "negativeHeart" | "glassBlade" | "coinHex";
+export type BargainId = "oracleLens" | "negativeHeart" | "glassBlade" | "coinHex" | "giantEquation";
 
 export interface ShopUpgrade {
   id: ShopUpgradeId;

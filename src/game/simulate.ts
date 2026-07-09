@@ -50,6 +50,7 @@ function makeSimPlayer(): PlayerState {
     negativesUnlocked: false,
     extraDamageTaken: 0,
     lifesteal: 0,
+    permutationBonus: 0,
     items: {},
   };
 }

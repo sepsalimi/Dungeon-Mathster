@@ -1,5 +1,16 @@
 // Game state hook: run lifecycle, combat loop, doors, shop, bargains, and audio.
-import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  nextSoundLevel,
+  pauseAudio,
+  playBossDialogTick as playBossDialogTickSound,
+  playFeedback,
+  primeAudio,
+  startMusic,
+  stopMusic,
+  type MusicState,
+  type MusicTheme,
+} from "./audio";
 import {
   makeDoorChoices,
   makeEnemy,
@@ -10,17 +21,19 @@ import {
 } from "./content";
 import { applyLifesteal, getEnemyAttackInterval, resolveEnemyAttack } from "./combat";
 import { isCorrectPath, makePuzzle } from "./math";
+import { makeTutorialDoors, markTutorialSeen, shouldShowTutorial } from "./tutorial";
 import {
   FINAL_FLOOR,
   STARTING_MAX_HP,
   STARTING_SWORD_DAMAGE,
+  addPermutationBonus,
   applyBossItem,
   getBossReward,
   getFloorOperators,
   getRoomPathLength,
 } from "./progression";
-import { applyBargain, applyShopUpgrade, getUpgradeCost, shopUpgrades } from "./shop";
-import type { BargainId, DoorChoice, FeedbackState, GameState, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
+import { applyBargain, applyShopUpgrade, getShopRewardItem, getUpgradeCost, shopUpgrades } from "./shop";
+import type { BargainId, DoorChoice, GameState, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
 
 const initialPlayer: PlayerState = {
   hp: STARTING_MAX_HP,
@@ -35,6 +48,7 @@ const initialPlayer: PlayerState = {
   negativesUnlocked: false,
   extraDamageTaken: 0,
   lifesteal: 0,
+  permutationBonus: 0,
   items: {},
 };
 
@@ -49,28 +63,10 @@ const initialState: GameState = {
   feedback: null,
   frozenUntil: 0,
   paused: false,
+  tutorial: null,
 };
 
-interface MusicState {
-  interval: number;
-  theme: MusicTheme;
-}
-
-type MusicTheme = "fight" | "boss" | "door" | "shop" | "bargain";
-
-const soundLevelOrder: SoundLevel[] = ["loud", "mute", "low"];
-
-function nextSoundLevel(current: SoundLevel): SoundLevel {
-  const index = soundLevelOrder.indexOf(current);
-  return soundLevelOrder[(index + 1) % soundLevelOrder.length];
-}
-
-function getVolumeMultiplier(level: SoundLevel): number {
-  if (level === "mute") return 0;
-  if (level === "low") return 1;
-  return 3;
-}
-
+const REWARD_TRANSITION_DELAY = 1_550;
 export function useGame() {
   const [state, setState] = useState<GameState>(initialState);
   const [soundLevel, setSoundLevel] = useState<SoundLevel>("loud");
@@ -80,14 +76,15 @@ export function useGame() {
   const musicTheme = useRef<MusicTheme>("fight");
 
   const makeRunPuzzle = useCallback((size: number, player: PlayerState, floor: number, isBoss = false) => {
+    const pathLength = getRoomPathLength(size, floor, isBoss);
     return makePuzzle(size, {
       allowNegative: player.negativesUnlocked,
       operators: getFloorOperators(floor),
-      pathLength: getRoomPathLength(size, floor, isBoss),
+      pathLength: addPermutationBonus(pathLength, size, player.permutationBonus),
     });
   }, []);
 
-const ensureAudio = useCallback((theme?: MusicTheme) => {
+  const ensureAudio = useCallback((theme?: MusicTheme) => {
     if (theme) musicTheme.current = theme;
     primeAudio(audioContext);
     if (theme && music.current?.theme !== theme) stopMusic(music);
@@ -103,15 +100,17 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       phase: "combat",
       player: { ...initialPlayer },
       enemy: makeEnemy(false, 1),
-      puzzle: makePuzzle(3, { operators: getFloorOperators(1) }),
+      puzzle: makeRunPuzzle(3, initialPlayer, 1),
+      tutorial: shouldShowTutorial() ? "swipe" : null,
     });
-  }, [ensureAudio]);
+  }, [ensureAudio, makeRunPuzzle]);
 
   const pauseGame = useCallback(() => {
     setState((current) => {
       if (current.phase === "start" || current.phase === "victory" || current.phase === "defeat" || current.paused) {
         return current;
       }
+      pauseAudio(audioContext, music);
       return { ...current, paused: true, feedback: { kind: "pause", message: "Paused", nonce: Date.now() } };
     });
   }, []);
@@ -135,6 +134,10 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       }
       return next;
     });
+  }, []);
+
+  const playBossDialogTick = useCallback((index: number) => {
+    playBossDialogTickSound(audioContext, soundLevelRef, index);
   }, []);
 
   const startBossFight = useCallback(() => {
@@ -173,6 +176,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
           player: healedPlayer,
           puzzle: makeRunPuzzle(gridSize, healedPlayer, current.floor, current.enemy.isBoss),
           feedback: { kind: "hit", message: "", nonce: Date.now(), amount: current.player.swordDamage },
+          tutorial: current.tutorial === "swipe" ? "finish" : current.tutorial,
         };
       }
 
@@ -193,38 +197,78 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
 
         const bossReward = applyBossItem({ ...healedPlayer, gold: healedPlayer.gold + bossGold }, current.floor);
         const nextFloor = current.floor + 1;
+        const nonce = Date.now();
+        window.setTimeout(() => {
+          setState((scheduled) => {
+            if (scheduled.feedback?.nonce !== nonce) return scheduled;
+            return {
+              ...scheduled,
+              phase: "door",
+              floor: nextFloor,
+              roomsCleared: 0,
+              enemy: null,
+              puzzle: null,
+              doors: makeDoorChoices(0),
+              feedback: {
+                kind: "buy",
+                message: `${bossReward.message} Floor ${nextFloor} opens. +${bossGold} gold.`,
+                nonce: Date.now(),
+              },
+            };
+          });
+        }, REWARD_TRANSITION_DELAY);
         return {
           ...current,
-          phase: "door",
-          floor: nextFloor,
-          roomsCleared: 0,
-          enemy: { ...current.enemy, hp: 0 },
+          enemy: null,
           puzzle: null,
-          doors: makeDoorChoices(0),
+          doors: [],
           player: bossReward.player,
           feedback: {
             kind: "buy",
             message: `${bossReward.message} Floor ${nextFloor} opens. +${bossGold} gold.`,
-            nonce: Date.now(),
+            nonce,
+            rewards: [
+              { kind: "gold", amount: bossGold },
+              { kind: "item", itemId: bossReward.item },
+            ],
           },
         };
       }
 
       const roomsCleared = current.roomsCleared + 1;
       const reward = MONSTER_REWARD + healedPlayer.goldBonus;
+      const nonce = Date.now();
+      window.setTimeout(() => {
+        setState((scheduled) => {
+          if (scheduled.feedback?.nonce !== nonce) return scheduled;
+          return {
+            ...scheduled,
+            phase: "door",
+            roomsCleared,
+            enemy: null,
+            puzzle: null,
+            doors: scheduled.tutorial ? makeTutorialDoors() : makeDoorChoices(roomsCleared),
+            tutorial: scheduled.tutorial ? "door" : null,
+            feedback: {
+              kind: "buy",
+              message: `Monster defeated. +${reward} gold.`,
+              nonce: Date.now(),
+            },
+          };
+        });
+      }, REWARD_TRANSITION_DELAY);
       return {
         ...current,
-        phase: "door",
-        roomsCleared,
-        enemy: { ...current.enemy, hp: 0 },
+        enemy: null,
         puzzle: null,
-        doors: makeDoorChoices(roomsCleared),
+        doors: [],
         player: { ...healedPlayer, gold: healedPlayer.gold + reward },
         feedback: {
           kind: "hit",
           message: `Monster defeated. +${reward} gold.`,
-          nonce: Date.now(),
+          nonce,
           amount: current.player.swordDamage,
+          rewards: [{ kind: "gold", amount: reward }],
         },
       };
     });
@@ -239,6 +283,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         paused: false,
         doors: [],
         enemy: null,
+        tutorial: current.tutorial === "door" ? "shop" : current.tutorial,
         feedback: { kind: "buy", message: "A quiet merchant opens a brass chest.", nonce: Date.now() },
       }));
       return;
@@ -260,14 +305,20 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     if (door.kind === "mystery") {
       setState((current) => ({
         ...current,
+        doors: [],
         player: {
           ...current.player,
           hp: Math.min(current.player.maxHp, current.player.hp + MYSTERY_HEAL),
           gold: current.player.gold + MYSTERY_GOLD,
         },
-        feedback: { kind: "buy", message: `Mystery room: +${MYSTERY_HEAL} HP and +${MYSTERY_GOLD} gold.`, nonce: Date.now() },
+        feedback: {
+          kind: "buy",
+          message: `Mystery room: +${MYSTERY_HEAL} HP and +${MYSTERY_GOLD} gold.`,
+          nonce: Date.now(),
+          rewards: [{ kind: "gold", amount: MYSTERY_GOLD }],
+        },
       }));
-      window.setTimeout(() => setState((current) => startNextFight(current, makeRunPuzzle)), 850);
+      window.setTimeout(() => setState((current) => startNextFight({ ...current, feedback: null }, makeRunPuzzle)), 1_800);
       return;
     }
 
@@ -277,8 +328,20 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
   const takeBargain = useCallback((id: BargainId) => {
     ensureAudio("bargain");
     setState((current) => {
-      const { player, message } = applyBargain(current.player, id);
-      return startNextFight({ ...current, player, feedback: { kind: "buy", message, nonce: Date.now() } }, makeRunPuzzle);
+      const { player, message, item } = applyBargain(current.player, id);
+      return startNextFight(
+        {
+          ...current,
+          player,
+          feedback: {
+            kind: "buy",
+            message,
+            nonce: Date.now(),
+            rewards: item ? [{ kind: "item", itemId: item }] : undefined,
+          },
+        },
+        makeRunPuzzle,
+      );
     });
   }, [ensureAudio, makeRunPuzzle]);
 
@@ -292,18 +355,32 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         return { ...current, feedback: { kind: "blocked", message: "Not enough gold.", nonce: Date.now() } };
       }
 
+      const rewardItem = getShopRewardItem(id);
       return {
         ...current,
         player: applyShopUpgrade(current.player, id),
-        feedback: { kind: "buy", message: `${upgrade.name} purchased.`, nonce: Date.now() },
+        feedback: {
+          kind: "buy",
+          message: `${upgrade.name} purchased.`,
+          nonce: Date.now(),
+          rewards: rewardItem ? [{ kind: "item", itemId: rewardItem }] : undefined,
+        },
       };
     });
   }, [ensureAudio]);
 
   const leaveShop = useCallback(() => {
     ensureAudio("fight");
-    setState((current) => startNextFight(current, makeRunPuzzle));
+    setState((current) => {
+      if (current.tutorial === "shop") markTutorialSeen();
+      return startNextFight({ ...current, tutorial: null, feedback: null }, makeRunPuzzle);
+    });
   }, [ensureAudio, makeRunPuzzle]);
+
+  const skipTutorial = useCallback(() => {
+    markTutorialSeen();
+    setState((current) => ({ ...current, tutorial: null }));
+  }, []);
 
   useEffect(() => {
     const onPopState = () => pauseGame();
@@ -370,6 +447,10 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
                 kind: "buy",
                 message: `Barbed Armor defeated the boss. ${bossReward.message} Floor ${nextFloor} opens.`,
                 nonce: Date.now(),
+                rewards: [
+                  { kind: "gold", amount: bossGold },
+                  { kind: "item", itemId: bossReward.item },
+                ],
               },
             };
           }
@@ -388,6 +469,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
               kind: "buy",
               message: `Barbed Armor defeated the monster. +${reward} gold.`,
               nonce: Date.now(),
+              rewards: [{ kind: "gold", amount: reward }],
             },
           };
         }
@@ -414,10 +496,12 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     buyUpgrade,
     leaveShop,
     startBossFight,
+    playBossDialogTick,
     resumeGame,
     pauseGame,
     cycleSoundLevel,
     takeBargain,
+    skipTutorial,
   };
 }
 
@@ -442,108 +526,14 @@ function startSpecificFight(
     puzzle: makeRunPuzzle(isBoss ? 4 : 3, current.player, current.floor, isBoss),
     doors: [],
     frozenUntil: 0,
-    feedback: isBoss ? { kind: "blocked", message: "The boss waits behind the iron sum gate.", nonce: Date.now() } : null,
+    feedback: isBoss
+      ? { kind: "blocked", message: "The boss waits behind the iron sum gate.", nonce: Date.now() }
+      : current.feedback?.kind === "hit"
+        ? null
+        : current.feedback,
   };
 }
 
-function primeAudio(audioContext: MutableRefObject<AudioContext | null>) {
-  const AudioCtor = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AudioCtor) return;
-  audioContext.current ??= new AudioCtor();
-  void audioContext.current.resume();
-}
-
-function startMusic(
-  audioContext: MutableRefObject<AudioContext | null>,
-  music: MutableRefObject<MusicState | null>,
-  soundLevelRef: MutableRefObject<SoundLevel>,
-  theme: MusicTheme,
-) {
-  const context = audioContext.current;
-  const volumeMultiplier = getVolumeMultiplier(soundLevelRef.current);
-  if (!context || context.state !== "running" || music.current || volumeMultiplier === 0) return;
-
-  const pattern = musicPatterns[theme];
-  let index = 0;
-const playStep = () => {
-    playTone(
-      context,
-      pattern.bass[index % pattern.bass.length],
-      0.025,
-      pattern.beat * 0.00048,
-      pattern.bassType,
-      pattern.volume * volumeMultiplier,
-    );
-    if (index % pattern.melodyEvery === 0) {
-      window.setTimeout(
-        () =>
-          playTone(
-            context,
-            pattern.melody[index % pattern.melody.length],
-            0.025,
-            pattern.beat * 0.00034,
-            "sine",
-            pattern.volume * 0.82 * volumeMultiplier,
-          ),
-        pattern.beat * 0.24,
-      );
-    }
-    index += 1;
-  };
-  playStep();
-  const interval = window.setInterval(playStep, pattern.beat);
-
-  music.current = { interval, theme };
-}
-
-function stopMusic(music: MutableRefObject<MusicState | null>) {
-  if (!music.current) return;
-  window.clearInterval(music.current.interval);
-  music.current = null;
-}
-
-function playFeedback(
-  audioContext: MutableRefObject<AudioContext | null>,
-  feedback: FeedbackState,
-  soundLevelRef: MutableRefObject<SoundLevel>,
-) {
-  const context = audioContext.current;
-  const volumeMultiplier = getVolumeMultiplier(soundLevelRef.current);
-  if (!context || context.state !== "running" || volumeMultiplier === 0) return;
-
-  if (feedback.kind === "hit") {
-    playTone(context, 960, 0.004, 0.055, "square", 0.13 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 420, 0.006, 0.08, "sawtooth", 0.08 * volumeMultiplier), 32);
-  }
-  if (feedback.kind === "miss") playTone(context, 260, 0.02, 0.13, "sine", 0.045 * volumeMultiplier);
-  if (feedback.kind === "enemy") {
-    playTone(context, 72, 0.06, 0.16, "sawtooth", 0.11 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 55, 0.04, 0.1, "square", 0.08 * volumeMultiplier), 55);
-  }
-  if (feedback.kind === "buy") {
-    playTone(context, 660, 0.02, 0.08, "triangle", 0.09 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 880, 0.02, 0.08, "triangle", 0.08 * volumeMultiplier), 70);
-  }
-  if (feedback.kind === "blocked" || feedback.kind === "pause") {
-    playTone(context, 240, 0.02, 0.08, "sine", 0.06 * volumeMultiplier);
-  }
-}
-
-function playTone(context: AudioContext, frequency: number, attack: number, duration: number, type: OscillatorType, volume = 0.11) {
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  const now = context.currentTime;
-
-  oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, now);
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(volume, now + attack);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start(now);
-  oscillator.stop(now + duration + 0.02);
-}
 function getMusicTheme(state: GameState): MusicTheme | null {
   if (state.phase === "combat") return state.enemy?.isBoss ? "boss" : "fight";
   if (state.phase === "bossIntro") return "boss";
@@ -553,55 +543,6 @@ function getMusicTheme(state: GameState): MusicTheme | null {
   return null;
 }
 
-const musicPatterns: Record<MusicTheme, {
-  bass: number[];
-  melody: number[];
-  beat: number;
-  volume: number;
-  melodyEvery: number;
-  bassType: OscillatorType;
-}> = {
-  fight: {
-    bass: [82.41, 98, 110, 73.42, 82.41, 65.41],
-    melody: [196, 174.61, 146.83, 164.81, 130.81, 146.83],
-    beat: 560,
-    volume: 0.045,
-    melodyEvery: 2,
-    bassType: "triangle",
-  },
-  boss: {
-    bass: [65.41, 65.41, 73.42, 61.74, 55, 61.74],
-    melody: [130.81, 146.83, 123.47, 98],
-    beat: 430,
-    volume: 0.052,
-    melodyEvery: 2,
-    bassType: "sawtooth",
-  },
-  door: {
-    bass: [98, 123.47, 146.83, 123.47],
-    melody: [246.94, 293.66, 261.63, 220],
-    beat: 760,
-    volume: 0.038,
-    melodyEvery: 1,
-    bassType: "triangle",
-  },
-  shop: {
-    bass: [110, 146.83, 164.81, 146.83],
-    melody: [329.63, 293.66, 246.94, 293.66],
-    beat: 700,
-    volume: 0.036,
-    melodyEvery: 1,
-    bassType: "sine",
-  },
-  bargain: {
-    bass: [73.42, 69.3, 61.74, 69.3],
-    melody: [155.56, 146.83, 123.47, 116.54],
-    beat: 640,
-    volume: 0.043,
-    melodyEvery: 2,
-    bassType: "triangle",
-  },
-};
 function getDoorMusicTheme(kind: DoorChoice["kind"]): MusicTheme {
   if (kind === "shop") return "shop";
   if (kind === "bargain") return "bargain";

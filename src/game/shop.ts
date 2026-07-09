@@ -1,6 +1,6 @@
 // Shop upgrades and cursed bargains: catalog, pricing, and pure apply functions.
 // Kept free of React state so the balance simulation can reuse the exact same rules.
-import type { BargainId, BargainOption, PlayerState, ShopUpgrade, ShopUpgradeId } from "./types";
+import type { BargainId, BargainOption, ItemId, PlayerState, ShopUpgrade, ShopUpgradeId } from "./types";
 import { addItem, getItemCount } from "./progression";
 
 export const shopUpgrades: ShopUpgrade[] = [
@@ -67,15 +67,22 @@ export const bargainOptions: BargainOption[] = [
     upside: "Heads: gain 2 sword damage.",
     downside: "Tails: monsters deal 1 extra damage.",
   },
+  {
+    id: "giantEquation",
+    name: "Giant Equation",
+    upside: "Gain 2 sword damage and 40 max HP.",
+    downside: "Future answers need 1 extra number when the grid can fit it.",
+  },
 ];
 
 export function applyBargain(
   player: PlayerState,
   id: BargainId,
   rng: () => number = Math.random,
-): { player: PlayerState; message: string } {
-  let next = addItem({ ...player }, id);
+): { player: PlayerState; message: string; item: ItemId | null } {
+  let next = addItem({ ...player }, id === "giantEquation" ? "longEquation" : id);
   let message = bargainOptions.find((option) => option.id === id)?.name ?? "Bargain taken";
+  let item: ItemId | null = id === "giantEquation" ? "longEquation" : id;
 
   if (id === "oracleLens") {
     next.oracleLensChance = Math.min(0.75, next.oracleLensChance + 0.25);
@@ -104,6 +111,22 @@ export function applyBargain(
       message = "Coin Hex: tails. Monsters hit harder.";
     }
   }
+  if (id === "giantEquation") {
+    next.maxHp += 40;
+    next.hp = Math.min(next.maxHp, next.hp + 40);
+    next.swordDamage += 2;
+    next.permutationBonus += 1;
+    message = "Giant Equation taken. More power, longer answers.";
+  }
 
-  return { player: next, message };
+  return { player: next, message, item };
+}
+
+export function getShopRewardItem(id: ShopUpgradeId): ItemId | null {
+  if (id === "heal") return null;
+  if (id === "maxHp") return "maxHp";
+  if (id === "damageReductionArmor") return "damageReductionArmor";
+  if (id === "temporaryArmor") return "temporaryArmor";
+  if (id === "barbedArmor") return "barbedArmor";
+  return "sword";
 }
