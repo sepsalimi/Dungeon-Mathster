@@ -74,4 +74,19 @@ describe("CombatView tutorial cues", () => {
     expect(html).toContain("enemy-plate--tutorial");
     expect(html).toContain("player-health-card--tutorial");
   });
+
+  it("raises the HUD and highlights gold during the gold tutorial step", () => {
+    const html = renderToStaticMarkup(
+      <CombatView
+        state={{ ...combatState, enemy: null, puzzle: null, tutorial: "gold", player: { ...combatState.player, gold: 18 } }}
+        soundLevel="mute"
+        onPause={() => undefined}
+        onCycleSoundLevel={() => undefined}
+        onSubmitPath={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("hud--gold-tutorial");
+    expect(html).toContain("gold-chip--tutorial");
+  });
 });

@@ -18,7 +18,7 @@ export function Hud({ state, soundLevel, onPause, onCycleSoundLevel }: HudProps)
   const items = getItemStacks(state.player);
 
   return (
-    <header className="hud">
+    <header className={["hud", state.tutorial === "gold" ? "hud--gold-tutorial" : ""].filter(Boolean).join(" ")}>
       <div className="run-panel" aria-label={`Floor ${state.floor}, ${state.player.gold} gold`}>
         <div className="run-panel__topline">
           <span>Floor {state.floor}</span>
