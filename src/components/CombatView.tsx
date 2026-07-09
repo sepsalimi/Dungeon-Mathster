@@ -28,7 +28,13 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
       <RewardCue feedback={state.feedback} />
       <RoomScene enemy={state.enemy} feedback={state.feedback} lowHealth={lowHealth} frozen={frozen} />
       {state.puzzle && (
-        <MathGrid player={state.player} puzzle={state.puzzle} startHintId={startHintId} onSubmitPath={onSubmitPath} />
+        <MathGrid
+          player={state.player}
+          puzzle={state.puzzle}
+          startHintId={startHintId}
+          guidePath={state.tutorial === "swipe" || state.tutorial === "finish" ? state.puzzle.answerPath : null}
+          onSubmitPath={onSubmitPath}
+        />
       )}
       {hurtNonce && state.enemy && (
         <div

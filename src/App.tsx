@@ -6,6 +6,7 @@ import { PauseOverlay } from "./components/PauseOverlay";
 import { RunEndView } from "./components/RunEndView";
 import { ShopView } from "./components/ShopView";
 import { StartScreen } from "./components/StartScreen";
+import { TutorialOverlay } from "./components/TutorialOverlay";
 import { useGame } from "./game/useGame";
 
 export default function App() {
@@ -32,10 +33,18 @@ export default function App() {
         <BargainView state={game.state} onTakeBargain={game.takeBargain} {...hudControls} />
       )}
       {game.state.phase === "bossIntro" && (
-        <BossIntro state={game.state} onContinue={game.startBossFight} {...hudControls} />
+        <BossIntro
+          state={game.state}
+          onDialogTick={game.playBossDialogTick}
+          onContinue={game.startBossFight}
+          {...hudControls}
+        />
       )}
       {(game.state.phase === "victory" || game.state.phase === "defeat") && (
         <RunEndView state={game.state} onRestart={game.startRun} />
+      )}
+      {game.state.tutorial && !game.state.paused && (
+        <TutorialOverlay step={game.state.tutorial} onSkip={game.skipTutorial} />
       )}
       {game.state.paused && <PauseOverlay onResume={game.resumeGame} onRestart={game.startRun} />}
     </main>

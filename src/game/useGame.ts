@@ -1,4 +1,15 @@
-import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  nextSoundLevel,
+  pauseAudio,
+  playBossDialogTick as playBossDialogTickSound,
+  playFeedback,
+  primeAudio,
+  startMusic,
+  stopMusic,
+  type MusicState,
+  type MusicTheme,
+} from "./audio";
 import {
   bargainOptions,
   makeDoorChoices,
@@ -8,6 +19,7 @@ import {
   shopUpgrades,
 } from "./content";
 import { isCorrectPath, makePuzzle } from "./math";
+import { makeTutorialDoors, markTutorialSeen, shouldShowTutorial } from "./tutorial";
 import {
   STARTING_MAX_HP,
   addItem,
@@ -17,7 +29,7 @@ import {
   getFloorOperators,
   getRoomPathLength,
 } from "./progression";
-import type { BargainId, DoorChoice, FeedbackState, GameState, ItemId, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
+import type { BargainId, DoorChoice, GameState, ItemId, PlayerState, ShopUpgradeId, SoundLevel } from "./types";
 
 const initialPlayer: PlayerState = {
   hp: 120,
@@ -47,29 +59,10 @@ const initialState: GameState = {
   feedback: null,
   frozenUntil: 0,
   paused: false,
+  tutorial: null,
 };
 
-interface MusicState {
-  interval: number;
-  theme: MusicTheme;
-}
-
-type MusicTheme = "fight" | "boss" | "door" | "shop" | "bargain";
-
-const soundLevelOrder: SoundLevel[] = ["loud", "mute", "low"];
 const REWARD_TRANSITION_DELAY = 1_550;
-
-function nextSoundLevel(current: SoundLevel): SoundLevel {
-  const index = soundLevelOrder.indexOf(current);
-  return soundLevelOrder[(index + 1) % soundLevelOrder.length];
-}
-
-function getVolumeMultiplier(level: SoundLevel): number {
-  if (level === "mute") return 0;
-  if (level === "low") return 1;
-  return 3;
-}
-
 export function useGame() {
   const [state, setState] = useState<GameState>(initialState);
   const [soundLevel, setSoundLevel] = useState<SoundLevel>("loud");
@@ -87,7 +80,7 @@ export function useGame() {
     });
   }, []);
 
-const ensureAudio = useCallback((theme?: MusicTheme) => {
+  const ensureAudio = useCallback((theme?: MusicTheme) => {
     if (theme) musicTheme.current = theme;
     primeAudio(audioContext);
     if (theme && music.current?.theme !== theme) stopMusic(music);
@@ -104,6 +97,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       player: { ...initialPlayer },
       enemy: makeEnemy(false, 1),
       puzzle: makeRunPuzzle(3, initialPlayer, 1),
+      tutorial: shouldShowTutorial() ? "swipe" : null,
     });
   }, [ensureAudio, makeRunPuzzle]);
 
@@ -112,6 +106,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       if (current.phase === "start" || current.phase === "victory" || current.phase === "defeat" || current.paused) {
         return current;
       }
+      pauseAudio(audioContext, music);
       return { ...current, paused: true, feedback: { kind: "pause", message: "Paused", nonce: Date.now() } };
     });
   }, []);
@@ -135,6 +130,10 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       }
       return next;
     });
+  }, []);
+
+  const playBossDialogTick = useCallback((index: number) => {
+    playBossDialogTickSound(audioContext, soundLevelRef, index);
   }, []);
 
   const startBossFight = useCallback(() => {
@@ -173,6 +172,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
           player: healedPlayer,
           puzzle: makeRunPuzzle(gridSize, healedPlayer, current.floor, current.enemy.isBoss),
           feedback: { kind: "hit", message: "", nonce: Date.now(), amount: current.player.swordDamage },
+          tutorial: current.tutorial === "swipe" ? "finish" : current.tutorial,
         };
       }
 
@@ -230,7 +230,8 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
             roomsCleared,
             enemy: null,
             puzzle: null,
-            doors: makeDoorChoices(roomsCleared),
+            doors: scheduled.tutorial ? makeTutorialDoors() : makeDoorChoices(roomsCleared),
+            tutorial: scheduled.tutorial ? "door" : null,
             feedback: {
               kind: "buy",
               message: `Monster defeated. +${reward} gold.`,
@@ -265,6 +266,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         paused: false,
         doors: [],
         enemy: null,
+        tutorial: current.tutorial === "door" ? "shop" : current.tutorial,
         feedback: { kind: "buy", message: "A quiet merchant opens a brass chest.", nonce: Date.now() },
       }));
       return;
@@ -424,8 +426,16 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
 
   const leaveShop = useCallback(() => {
     ensureAudio("fight");
-    setState((current) => startNextFight({ ...current, feedback: null }, makeRunPuzzle));
+    setState((current) => {
+      if (current.tutorial === "shop") markTutorialSeen();
+      return startNextFight({ ...current, tutorial: null, feedback: null }, makeRunPuzzle);
+    });
   }, [ensureAudio, makeRunPuzzle]);
+
+  const skipTutorial = useCallback(() => {
+    markTutorialSeen();
+    setState((current) => ({ ...current, tutorial: null }));
+  }, []);
 
   useEffect(() => {
     const onPopState = () => pauseGame();
@@ -533,10 +543,12 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     buyUpgrade,
     leaveShop,
     startBossFight,
+    playBossDialogTick,
     resumeGame,
     pauseGame,
     cycleSoundLevel,
     takeBargain,
+    skipTutorial,
   };
 }
 
@@ -583,115 +595,6 @@ function applyLifesteal(player: PlayerState): PlayerState {
   return { ...player, hp: Math.min(player.maxHp, player.hp + player.lifesteal) };
 }
 
-function primeAudio(audioContext: MutableRefObject<AudioContext | null>) {
-  const AudioCtor = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AudioCtor) return;
-  audioContext.current ??= new AudioCtor();
-  void audioContext.current.resume();
-}
-
-function startMusic(
-  audioContext: MutableRefObject<AudioContext | null>,
-  music: MutableRefObject<MusicState | null>,
-  soundLevelRef: MutableRefObject<SoundLevel>,
-  theme: MusicTheme,
-) {
-  const context = audioContext.current;
-  const volumeMultiplier = getVolumeMultiplier(soundLevelRef.current);
-  if (!context || context.state !== "running" || music.current || volumeMultiplier === 0) return;
-
-  const pattern = musicPatterns[theme];
-  let index = 0;
-const playStep = () => {
-    playTone(
-      context,
-      pattern.bass[index % pattern.bass.length],
-      0.025,
-      pattern.beat * 0.00048,
-      pattern.bassType,
-      pattern.volume * volumeMultiplier,
-    );
-    if (index % pattern.melodyEvery === 0) {
-      window.setTimeout(
-        () =>
-          playTone(
-            context,
-            pattern.melody[index % pattern.melody.length],
-            0.025,
-            pattern.beat * 0.00034,
-            "sine",
-            pattern.volume * 0.82 * volumeMultiplier,
-          ),
-        pattern.beat * 0.24,
-      );
-    }
-    index += 1;
-  };
-  playStep();
-  const interval = window.setInterval(playStep, pattern.beat);
-
-  music.current = { interval, theme };
-}
-
-function stopMusic(music: MutableRefObject<MusicState | null>) {
-  if (!music.current) return;
-  window.clearInterval(music.current.interval);
-  music.current = null;
-}
-
-function playFeedback(
-  audioContext: MutableRefObject<AudioContext | null>,
-  feedback: FeedbackState,
-  soundLevelRef: MutableRefObject<SoundLevel>,
-) {
-  const context = audioContext.current;
-  const volumeMultiplier = getVolumeMultiplier(soundLevelRef.current);
-  if (!context || context.state !== "running" || volumeMultiplier === 0) return;
-
-  if (feedback.rewards?.some((reward) => reward.kind === "gold")) {
-    playTone(context, 740, 0.006, 0.08, "triangle", 0.1 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 980, 0.006, 0.075, "triangle", 0.09 * volumeMultiplier), 58);
-    window.setTimeout(() => playTone(context, 1240, 0.006, 0.09, "sine", 0.075 * volumeMultiplier), 116);
-  }
-  if (feedback.rewards?.some((reward) => reward.kind === "item")) {
-    playTone(context, 220, 0.004, 0.055, "square", 0.07 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 660, 0.008, 0.11, "triangle", 0.105 * volumeMultiplier), 74);
-    window.setTimeout(() => playTone(context, 990, 0.008, 0.13, "sine", 0.09 * volumeMultiplier), 146);
-  }
-
-  if (feedback.kind === "hit") {
-    playTone(context, 960, 0.004, 0.055, "square", 0.13 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 420, 0.006, 0.08, "sawtooth", 0.08 * volumeMultiplier), 32);
-  }
-  if (feedback.kind === "miss") playTone(context, 260, 0.02, 0.13, "sine", 0.045 * volumeMultiplier);
-  if (feedback.kind === "enemy") {
-    playTone(context, 196, 0.004, 0.075, "triangle", 0.08 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 147, 0.006, 0.09, "sine", 0.055 * volumeMultiplier), 42);
-  }
-  if (feedback.kind === "buy" && !feedback.rewards?.length) {
-    playTone(context, 660, 0.02, 0.08, "triangle", 0.09 * volumeMultiplier);
-    window.setTimeout(() => playTone(context, 880, 0.02, 0.08, "triangle", 0.08 * volumeMultiplier), 70);
-  }
-  if (feedback.kind === "blocked" || feedback.kind === "pause") {
-    playTone(context, 240, 0.02, 0.08, "sine", 0.06 * volumeMultiplier);
-  }
-}
-
-function playTone(context: AudioContext, frequency: number, attack: number, duration: number, type: OscillatorType, volume = 0.11) {
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  const now = context.currentTime;
-
-  oscillator.type = type;
-  oscillator.frequency.setValueAtTime(frequency, now);
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(volume, now + attack);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start(now);
-  oscillator.stop(now + duration + 0.02);
-}
 function getMusicTheme(state: GameState): MusicTheme | null {
   if (state.phase === "combat") return state.enemy?.isBoss ? "boss" : "fight";
   if (state.phase === "bossIntro") return "boss";
@@ -701,55 +604,6 @@ function getMusicTheme(state: GameState): MusicTheme | null {
   return null;
 }
 
-const musicPatterns: Record<MusicTheme, {
-  bass: number[];
-  melody: number[];
-  beat: number;
-  volume: number;
-  melodyEvery: number;
-  bassType: OscillatorType;
-}> = {
-  fight: {
-    bass: [82.41, 98, 110, 73.42, 82.41, 65.41],
-    melody: [196, 174.61, 146.83, 164.81, 130.81, 146.83],
-    beat: 560,
-    volume: 0.045,
-    melodyEvery: 2,
-    bassType: "triangle",
-  },
-  boss: {
-    bass: [65.41, 65.41, 73.42, 61.74, 55, 61.74],
-    melody: [130.81, 146.83, 123.47, 98],
-    beat: 430,
-    volume: 0.052,
-    melodyEvery: 2,
-    bassType: "sawtooth",
-  },
-  door: {
-    bass: [98, 123.47, 146.83, 123.47],
-    melody: [246.94, 293.66, 261.63, 220],
-    beat: 760,
-    volume: 0.038,
-    melodyEvery: 1,
-    bassType: "triangle",
-  },
-  shop: {
-    bass: [110, 146.83, 164.81, 146.83],
-    melody: [329.63, 293.66, 246.94, 293.66],
-    beat: 700,
-    volume: 0.036,
-    melodyEvery: 1,
-    bassType: "sine",
-  },
-  bargain: {
-    bass: [73.42, 69.3, 61.74, 69.3],
-    melody: [155.56, 146.83, 123.47, 116.54],
-    beat: 640,
-    volume: 0.043,
-    melodyEvery: 2,
-    bassType: "triangle",
-  },
-};
 function getDoorMusicTheme(kind: DoorChoice["kind"]): MusicTheme {
   if (kind === "shop") return "shop";
   if (kind === "bargain") return "bargain";
