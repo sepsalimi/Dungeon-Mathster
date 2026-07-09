@@ -226,3 +226,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
+
+# tsc output for vite config
+vite.config.js
+vite.config.d.ts
