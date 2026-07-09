@@ -24,13 +24,11 @@ export function TalkingDialogText({ text, onSpeakTick, onTalkingChange }: Talkin
     }
 
     const timer = window.setTimeout(() => {
-      setVisibleCharacters((current) => {
-        const next = Math.min(current + 1, text.length);
-        const nextCharacter = text[next - 1] ?? "";
-        if (/[A-Za-z0-9]/.test(nextCharacter)) onSpeakTick(next, nextCharacter);
-        if (next >= text.length) onTalkingChange(false);
-        return next;
-      });
+      const next = Math.min(visibleCharacters + 1, text.length);
+      const nextCharacter = text[next - 1] ?? "";
+      if (/[A-Za-z0-9]/.test(nextCharacter)) onSpeakTick(next, nextCharacter);
+      setVisibleCharacters(next);
+      if (next >= text.length) onTalkingChange(false);
     }, LETTER_STEP_MS);
 
     return () => window.clearTimeout(timer);
