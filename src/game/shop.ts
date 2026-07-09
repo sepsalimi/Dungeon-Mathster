@@ -52,7 +52,7 @@ export const bargainOptions: BargainOption[] = [
   {
     id: "negativeHeart",
     name: "Negative Heart",
-    upside: "Gain 30 max HP and heal 30.",
+    upside: "Monster answers need 1 extra number when the grid can fit it.",
     downside: "Negative numbers enter the grid.",
   },
   {
@@ -90,10 +90,9 @@ export function applyBargain(
     message = "Oracle Lens taken. 25% answer starts will glow. Negative numbers enter the grid.";
   }
   if (id === "negativeHeart") {
-    next.maxHp += 30;
-    next.hp = Math.min(next.maxHp, next.hp + 30);
+    next.permutationBonus += 1;
     next.negativesUnlocked = true;
-    message = "Negative Heart taken. More HP, stranger numbers.";
+    message = "Negative Heart taken. Monster answers grow longer. Negative numbers enter the grid.";
   }
   if (id === "glassBlade") {
     next.swordDamage = Math.max(1, next.swordDamage * 2);

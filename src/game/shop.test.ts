@@ -34,4 +34,15 @@ describe("bargain options", () => {
     expect(message).toContain("Negative numbers enter the grid.");
     expect(item).toBe("oracleLens");
   });
+
+  it("Negative Heart adds a monster answer permutation instead of max HP", () => {
+    const { player, message, item } = applyBargain(makePlayer(), "negativeHeart");
+
+    expect(player.permutationBonus).toBe(1);
+    expect(player.negativesUnlocked).toBe(true);
+    expect(player.maxHp).toBe(120);
+    expect(player.hp).toBe(120);
+    expect(message).toContain("Monster answers grow longer.");
+    expect(item).toBe("negativeHeart");
+  });
 });

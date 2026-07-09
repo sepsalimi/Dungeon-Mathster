@@ -73,6 +73,7 @@ describe("non-combat rooms", () => {
 
     expect(html).toContain("120/120");
     expect(html).toContain("25% chance the first number in an answer glows.");
+    expect(html).toContain("Monster answers need 1 extra number when the grid can fit it.");
     expect(html).toContain("Negative numbers enter the grid.");
     expect(html).toContain("Giant Equation");
     expect(html).toContain("Gain 2 sword damage and 40 max HP.");
