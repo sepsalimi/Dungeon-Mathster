@@ -14,7 +14,7 @@ export function FloorIntroView({ floor, showScroll, onReady }: FloorIntroViewPro
 
   useEffect(() => {
     if (!showScroll) return;
-    const timer = window.setTimeout(() => setStage("prompt"), 4_200);
+    const timer = window.setTimeout(() => setStage("prompt"), 3_900);
     return () => window.clearTimeout(timer);
   }, [showScroll]);
 

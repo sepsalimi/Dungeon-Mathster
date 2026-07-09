@@ -59,6 +59,7 @@ button {
 
 .game-screen,
 .start-screen,
+.floor-intro,
 .end-screen {
   width: min(var(--game-available-width), var(--game-max-width), var(--game-width-from-height));
   aspect-ratio: 1 / 2;
@@ -1190,42 +1191,72 @@ p {
   background: linear-gradient(180deg, transparent, rgba(15, 13, 18, 0.92) 22%, #100e15 100%);
 }
 
-.start-settings {
-  display: grid;
-  gap: 0.55rem;
-  margin-top: 0.35rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid rgba(245, 239, 224, 0.12);
-  text-align: left;
+.pause-panel p {
+  margin: 0;
+  color: rgba(255, 248, 231, 0.82);
+  line-height: 1.45;
 }
 
-.start-settings > span {
+.tutorial-start-prompt {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 7, 11, 0.78);
+  backdrop-filter: blur(4px);
+}
+
+.tutorial-start-prompt__panel {
+  width: min(100%, 24rem);
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  color: #fff8e7;
+  text-align: center;
+  background: #17131d;
+  border: 1px solid rgba(245, 239, 224, 0.16);
+  box-shadow: 0 10px 0 #050407, 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.tutorial-start-prompt__panel > span {
   color: var(--text-accent);
   text-transform: uppercase;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 900;
   letter-spacing: 0.04em;
 }
 
-.settings-toggle {
+.tutorial-start-prompt__panel h1,
+.tutorial-start-prompt__panel p {
+  margin: 0;
+}
+
+.tutorial-start-prompt__panel h1 {
+  font-size: clamp(2rem, 10vw, 3.2rem);
+  line-height: 1.04;
+}
+
+.tutorial-start-prompt__panel p {
+  color: rgba(255, 248, 231, 0.82);
+  line-height: 1.45;
+}
+
+.prompt-toggle {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.65rem;
   color: #fff8e7;
   font-size: 0.95rem;
   cursor: pointer;
 }
 
-.settings-toggle input {
+.prompt-toggle input {
   width: 1.1rem;
   height: 1.1rem;
   accent-color: #f0c56f;
-}
-
-.pause-panel p {
-  margin: 0;
-  color: rgba(255, 248, 231, 0.82);
-  line-height: 1.45;
 }
 
 .end-screen {
@@ -1263,6 +1294,7 @@ p {
 
   .game-screen,
   .start-screen,
+  .floor-intro,
   .end-screen {
     border: 1px solid rgba(245, 239, 224, 0.12);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
@@ -1372,7 +1404,6 @@ p {
 
 .floor-intro {
   position: relative;
-  min-height: 100%;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -1392,17 +1423,16 @@ p {
   inset: 0;
   display: grid;
   place-items: center;
-  perspective: 280px;
+  padding: 1rem;
   overflow: hidden;
   pointer-events: none;
 }
 
 .floor-intro__crawl {
-  width: min(78vw, 22rem);
+  width: min(100%, 22rem);
   text-align: center;
   color: #f0c56f;
-  transform-origin: 50% 100%;
-  animation: floor-crawl 4s linear forwards;
+  animation: floor-crawl 3.8s ease-in-out forwards;
 }
 
 .floor-intro__crawl-eyebrow {
@@ -1456,15 +1486,20 @@ p {
 
 @keyframes floor-crawl {
   0% {
-    transform: rotateX(24deg) translateY(110%);
+    transform: translateY(42%);
     opacity: 0;
   }
-  12% {
+  18% {
+    transform: translateY(12%);
+    opacity: 1;
+  }
+  72% {
+    transform: translateY(-8%);
     opacity: 1;
   }
   100% {
-    transform: rotateX(24deg) translateY(-125%);
-    opacity: 0.2;
+    transform: translateY(-34%);
+    opacity: 0;
   }
 }
 

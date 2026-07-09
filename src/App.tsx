@@ -50,7 +50,7 @@ export default function App() {
         />
       )}
       {(game.state.phase === "victory" || game.state.phase === "defeat") && (
-        <RunEndView state={game.state} onRestart={game.startRun} />
+        <RunEndView state={game.state} onRestart={() => game.startRun(false)} />
       )}
       {game.state.tutorial && game.state.phase === "combat" && !game.state.paused && (
         <TutorialOverlay step={game.state.tutorial} onSkip={game.skipTutorial} />
@@ -59,7 +59,7 @@ export default function App() {
         <TutorialOfferOverlay onAccept={game.acceptTutorialOffer} onDecline={game.declineTutorialOffer} />
       )}
       {game.state.paused && !game.state.tutorialOffer && (
-        <PauseOverlay onResume={game.resumeGame} onRestart={game.startRun} />
+        <PauseOverlay onResume={game.resumeGame} onRestart={() => game.startRun(false)} />
       )}
     </main>
   );
