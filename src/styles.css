@@ -1432,7 +1432,7 @@ p {
   width: min(100%, 22rem);
   text-align: center;
   color: #f0c56f;
-  animation: floor-crawl 3.8s ease-in-out forwards;
+  animation: floor-crawl 5s ease-in-out forwards;
 }
 
 .floor-intro__crawl-eyebrow {
@@ -1486,19 +1486,19 @@ p {
 
 @keyframes floor-crawl {
   0% {
-    transform: translateY(42%);
+    transform: translateY(34%);
     opacity: 0;
   }
-  18% {
+  14% {
     transform: translateY(12%);
     opacity: 1;
   }
-  72% {
+  74% {
     transform: translateY(-8%);
     opacity: 1;
   }
   100% {
-    transform: translateY(-34%);
+    transform: translateY(-30%);
     opacity: 0;
   }
 }

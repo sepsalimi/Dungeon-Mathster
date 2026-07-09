@@ -24,6 +24,7 @@ export default function App() {
       {game.state.phase === "start" && <StartScreen onStart={game.startRun} />}
       {game.state.phase === "floorIntro" && (
         <FloorIntroView
+          key={game.state.floorIntroNonce}
           floor={game.state.floor}
           showScroll={game.state.showFloorScroll}
           onReady={game.confirmFloorReady}

@@ -35,6 +35,7 @@ function makeCombatState(overrides: Partial<GameState> = {}): GameState {
     tutorial: null,
     tutorialEnemyHitDone: false,
     showFloorScroll: true,
+    floorIntroNonce: 0,
     pendingBossFight: false,
     fightStats: emptyFightStats(),
     struggleTutorialOffered: false,

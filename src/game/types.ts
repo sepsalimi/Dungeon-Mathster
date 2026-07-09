@@ -113,6 +113,7 @@ export interface GameState {
   tutorial: TutorialStep | null;
   tutorialEnemyHitDone: boolean;
   showFloorScroll: boolean;
+  floorIntroNonce: number;
   pendingBossFight: boolean;
   fightStats: FightStats;
   struggleTutorialOffered: boolean;
