@@ -1370,6 +1370,124 @@ p {
   animation: damage-float 780ms ease-out forwards;
 }
 
+.floor-intro {
+  position: relative;
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #08070b;
+}
+
+.floor-intro__backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(240, 197, 111, 0.12), transparent 42%),
+    linear-gradient(180deg, #15121d 0%, #08070b 100%);
+}
+
+.floor-intro__crawl-wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 280px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.floor-intro__crawl {
+  width: min(78vw, 22rem);
+  text-align: center;
+  color: #f0c56f;
+  transform-origin: 50% 100%;
+  animation: floor-crawl 4s linear forwards;
+}
+
+.floor-intro__crawl-eyebrow {
+  margin: 0 0 0.45rem;
+  color: #f5efe0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.floor-intro__crawl h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 12vw, 4.4rem);
+  line-height: 1;
+  text-shadow: 0 4px 0 #2a1d08;
+}
+
+.floor-intro__crawl-copy {
+  margin: 0.8rem 0 0;
+  color: rgba(255, 248, 231, 0.82);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.floor-intro__prompt {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 0.9rem;
+  width: min(100%, 24rem);
+  padding: 1.2rem;
+  text-align: center;
+  color: #fff8e7;
+  animation: floor-prompt-in 500ms ease-out;
+}
+
+.floor-intro__prompt h1 {
+  margin: 0;
+  font-size: clamp(2rem, 10vw, 3.4rem);
+  line-height: 1.04;
+}
+
+.floor-intro--fade .floor-intro__prompt {
+  animation: floor-fade-out 700ms ease-in forwards;
+}
+
+.floor-intro--fade .floor-intro__backdrop {
+  animation: floor-fade-out 700ms ease-in forwards;
+}
+
+@keyframes floor-crawl {
+  0% {
+    transform: rotateX(24deg) translateY(110%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(24deg) translateY(-125%);
+    opacity: 0.2;
+  }
+}
+
+@keyframes floor-prompt-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floor-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 .pause-overlay {
   position: fixed;
   inset: 0;

@@ -15,9 +15,10 @@ export type ItemId =
   | "maxHp"
   | "goldBonus"
   | "longEquation";
-export type TutorialStep = "swipe" | "finish" | "door" | "shop";
+export type TutorialStep = "swipe" | "finish" | "enemyHit" | "door" | "shop";
 export type GamePhase =
   | "start"
+  | "floorIntro"
   | "combat"
   | "door"
   | "shop"
@@ -110,6 +111,9 @@ export interface GameState {
   frozenUntil: number;
   paused: boolean;
   tutorial: TutorialStep | null;
+  tutorialEnemyHitDone: boolean;
+  showFloorScroll: boolean;
+  pendingBossFight: boolean;
   fightStats: FightStats;
   struggleTutorialOffered: boolean;
   tutorialOffer: boolean;

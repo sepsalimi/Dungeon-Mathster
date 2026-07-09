@@ -2,6 +2,7 @@ import { BossIntro } from "./components/BossIntro";
 import { BargainView } from "./components/BargainView";
 import { CombatView } from "./components/CombatView";
 import { DoorChoiceView } from "./components/DoorChoiceView";
+import { FloorIntroView } from "./components/FloorIntroView";
 import { PauseOverlay } from "./components/PauseOverlay";
 import { RunEndView } from "./components/RunEndView";
 import { ShopView } from "./components/ShopView";
@@ -21,6 +22,13 @@ export default function App() {
   return (
     <main className="app-shell">
       {game.state.phase === "start" && <StartScreen onStart={game.startRun} />}
+      {game.state.phase === "floorIntro" && (
+        <FloorIntroView
+          floor={game.state.floor}
+          showScroll={game.state.showFloorScroll}
+          onReady={game.confirmFloorReady}
+        />
+      )}
       {game.state.phase === "combat" && (
         <CombatView state={game.state} onSubmitPath={game.submitPath} {...hudControls} />
       )}
@@ -44,7 +52,7 @@ export default function App() {
       {(game.state.phase === "victory" || game.state.phase === "defeat") && (
         <RunEndView state={game.state} onRestart={game.startRun} />
       )}
-      {game.state.tutorial && !game.state.paused && (
+      {game.state.tutorial && game.state.phase === "combat" && !game.state.paused && (
         <TutorialOverlay step={game.state.tutorial} onSkip={game.skipTutorial} />
       )}
       {game.state.paused && game.state.tutorialOffer && (
