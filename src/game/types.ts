@@ -99,6 +99,7 @@ export interface GameState {
   phase: GamePhase;
   floor: number;
   roomsCleared: number;
+  monsterRoomsCleared: number;
   player: PlayerState;
   enemy: EnemyState | null;
   puzzle: Puzzle | null;

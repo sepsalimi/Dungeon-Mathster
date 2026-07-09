@@ -1,6 +1,6 @@
 // Verifies floor difficulty helpers that sit above raw math grid generation.
 import { describe, expect, it, vi } from "vitest";
-import { addPermutationBonus, getRoomPathLength } from "./progression";
+import { addPermutationBonus, getBossDefinition, getRoomPathLength } from "./progression";
 
 describe("progression puzzle length rules", () => {
   it("varies normal room path length instead of always using two numbers", () => {
@@ -16,5 +16,9 @@ describe("progression puzzle length rules", () => {
     expect(addPermutationBonus(3, 3, 1)).toBe(5);
     expect(addPermutationBonus(5, 3, 1)).toBe(5);
     expect(addPermutationBonus(5, 4, 1)).toBe(7);
+  });
+
+  it("keeps boss dialogue aligned with the five-door route", () => {
+    expect(getBossDefinition(1).intro).toContain("Five doors");
   });
 });
