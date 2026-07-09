@@ -35,4 +35,14 @@ describe("bargain options", () => {
     expect(item).toBe("oracleLens");
   });
 
+  it("Oracle Lens costs 20 max HP when negative numbers are already in the grid", () => {
+    const first = applyBargain(makePlayer(), "oracleLens");
+    const { player, message } = applyBargain(first.player, "oracleLens");
+
+    expect(player.oracleLensChance).toBe(0.5);
+    expect(player.negativesUnlocked).toBe(true);
+    expect(player.maxHp).toBe(80);
+    expect(player.hp).toBe(80);
+    expect(message).toContain("Max HP reduced by 20.");
+  });
 });

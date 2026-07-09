@@ -121,4 +121,23 @@ describe("non-combat rooms", () => {
     expect(html).toContain("Gain 2 sword damage and 40 max HP.");
     expect(html).toContain("Future answers need 1 extra number");
   });
+
+  it("shows Oracle Lens max HP downside when negatives are already unlocked", () => {
+    const html = renderToStaticMarkup(
+      <BargainView
+        state={{
+          ...state,
+          phase: "bargain",
+          player: { ...state.player, negativesUnlocked: true, oracleLensChance: 0.25 },
+        }}
+        soundLevel="mute"
+        onPause={() => undefined}
+        onCycleSoundLevel={() => undefined}
+        onTakeBargain={() => undefined}
+      />,
+    );
+
+    expect(html).toContain("Lose 20 max HP.");
+    expect(html).not.toContain("25% chance the first number in an answer glows.</span><span class=\"bargain-downside\">Negative numbers enter the grid.");
+  });
 });
