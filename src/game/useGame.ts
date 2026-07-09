@@ -8,6 +8,7 @@ import {
   shopUpgrades,
 } from "./content";
 import { isCorrectPath, makePuzzle } from "./math";
+import { makeTutorialDoors, markTutorialSeen, shouldShowTutorial } from "./tutorial";
 import {
   STARTING_MAX_HP,
   addItem,
@@ -47,6 +48,7 @@ const initialState: GameState = {
   feedback: null,
   frozenUntil: 0,
   paused: false,
+  tutorial: null,
 };
 
 interface MusicState {
@@ -103,6 +105,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
       player: { ...initialPlayer },
       enemy: makeEnemy(false, 1),
       puzzle: makeRunPuzzle(3, initialPlayer, 1),
+      tutorial: shouldShowTutorial() ? "swipe" : null,
     });
   }, [ensureAudio, makeRunPuzzle]);
 
@@ -172,6 +175,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
           player: healedPlayer,
           puzzle: makeRunPuzzle(gridSize, healedPlayer, current.floor, current.enemy.isBoss),
           feedback: { kind: "hit", message: "", nonce: Date.now(), amount: current.player.swordDamage },
+          tutorial: current.tutorial === "swipe" ? "finish" : current.tutorial,
         };
       }
 
@@ -204,7 +208,8 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         roomsCleared,
         enemy: { ...current.enemy, hp: 0 },
         puzzle: null,
-        doors: makeDoorChoices(roomsCleared),
+        doors: current.tutorial ? makeTutorialDoors() : makeDoorChoices(roomsCleared),
+        tutorial: current.tutorial ? "door" : null,
         player: { ...healedPlayer, gold: healedPlayer.gold + reward },
         feedback: {
           kind: "hit",
@@ -225,6 +230,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
         paused: false,
         doors: [],
         enemy: null,
+        tutorial: current.tutorial === "door" ? "shop" : current.tutorial,
         feedback: { kind: "buy", message: "A quiet merchant opens a brass chest.", nonce: Date.now() },
       }));
       return;
@@ -351,8 +357,16 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
 
   const leaveShop = useCallback(() => {
     ensureAudio("fight");
-    setState((current) => startNextFight(current, makeRunPuzzle));
+    setState((current) => {
+      if (current.tutorial === "shop") markTutorialSeen();
+      return startNextFight({ ...current, tutorial: null }, makeRunPuzzle);
+    });
   }, [ensureAudio, makeRunPuzzle]);
+
+  const skipTutorial = useCallback(() => {
+    markTutorialSeen();
+    setState((current) => ({ ...current, tutorial: null }));
+  }, []);
 
   useEffect(() => {
     const onPopState = () => pauseGame();
@@ -459,6 +473,7 @@ const ensureAudio = useCallback((theme?: MusicTheme) => {
     pauseGame,
     cycleSoundLevel,
     takeBargain,
+    skipTutorial,
   };
 }
 
