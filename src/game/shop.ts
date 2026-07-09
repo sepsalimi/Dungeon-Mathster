@@ -46,13 +46,13 @@ export const bargainOptions: BargainOption[] = [
   {
     id: "oracleLens",
     name: "Oracle Lens",
-    upside: "Often the first number in an answer glows.",
-    downside: "Lose 15 max HP permanently.",
+    upside: "25% chance the first number in an answer glows.",
+    downside: "Negative numbers enter the grid.",
   },
   {
     id: "negativeHeart",
     name: "Negative Heart",
-    upside: "Gain 30 max HP and heal 30.",
+    upside: "Monster answers need 1 extra number when the grid can fit it.",
     downside: "Negative numbers enter the grid.",
   },
   {
@@ -86,15 +86,13 @@ export function applyBargain(
 
   if (id === "oracleLens") {
     next.oracleLensChance = Math.min(0.75, next.oracleLensChance + 0.25);
-    next.maxHp = Math.max(1, next.maxHp - 15);
-    next.hp = Math.min(next.hp, next.maxHp);
-    message = "Oracle Lens taken. Some answer starts will glow.";
+    next.negativesUnlocked = true;
+    message = "Oracle Lens taken. 25% answer starts will glow. Negative numbers enter the grid.";
   }
   if (id === "negativeHeart") {
-    next.maxHp += 30;
-    next.hp = Math.min(next.maxHp, next.hp + 30);
+    next.permutationBonus += 1;
     next.negativesUnlocked = true;
-    message = "Negative Heart taken. More HP, stranger numbers.";
+    message = "Negative Heart taken. Monster answers grow longer. Negative numbers enter the grid.";
   }
   if (id === "glassBlade") {
     next.swordDamage = Math.max(1, next.swordDamage * 2);

@@ -7,6 +7,7 @@ interface MathGridProps {
   puzzle: Puzzle;
   startHintId?: string | null;
   guidePath?: string[] | null;
+  highlightPlayerHealth?: boolean;
   onSubmitPath: (path: string[]) => void;
 }
 
@@ -17,7 +18,7 @@ interface DragPoint {
 
 const dragSampleSpacing = 12;
 
-export function MathGrid({ player, puzzle, startHintId, guidePath, onSubmitPath }: MathGridProps) {
+export function MathGrid({ player, puzzle, startHintId, guidePath, highlightPlayerHealth = false, onSubmitPath }: MathGridProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const selectedRef = useRef<string[]>([]);
   const activeInput = useRef<"pointer" | "touch" | null>(null);
@@ -155,7 +156,10 @@ export function MathGrid({ player, puzzle, startHintId, guidePath, onSubmitPath 
         <span>Make</span>
         <strong>{puzzle.target}</strong>
       </div>
-      <div className="player-health-card" aria-label={`Player HP ${player.hp} of ${player.maxHp}`}>
+      <div
+        className={["player-health-card", highlightPlayerHealth ? "player-health-card--tutorial" : ""].filter(Boolean).join(" ")}
+        aria-label={`Player HP ${player.hp} of ${player.maxHp}`}
+      >
         <div className="player-health-label">
           <span>Player HP</span>
           <strong>

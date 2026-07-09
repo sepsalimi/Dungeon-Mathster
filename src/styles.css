@@ -425,6 +425,12 @@ button {
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
 }
 
+.enemy-plate--tutorial {
+  border-color: rgba(157, 242, 255, 0.9);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), 0 0 0 5px rgba(157, 242, 255, 0.16), 0 0 24px rgba(157, 242, 255, 0.4);
+  animation: tutorial-focus-pulse 1.2s ease-in-out infinite;
+}
+
 .enemy-plate strong {
   display: block;
   color: var(--text-strong);
@@ -593,6 +599,16 @@ button {
   box-shadow:
     0 5px 0 #070508,
     inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+}
+
+.player-health-card--tutorial {
+  border-color: #9df2ff;
+  box-shadow:
+    0 5px 0 #070508,
+    inset 0 0 0 2px rgba(255, 255, 255, 0.08),
+    0 0 0 5px rgba(157, 242, 255, 0.16),
+    0 0 24px rgba(157, 242, 255, 0.42);
+  animation: tutorial-focus-pulse 1.2s ease-in-out infinite;
 }
 
 .player-health-label {
@@ -1001,10 +1017,15 @@ p {
   display: block;
 }
 
+.upgrade-row strong {
+  font-size: clamp(1.08rem, 5vw, 1.3rem);
+  line-height: 1.12;
+}
+
 .upgrade-row small {
   margin-top: 0.16rem;
   color: var(--text-body);
-  font-size: 0.9rem;
+  font-size: clamp(0.98rem, 4.2vw, 1.08rem);
   line-height: 1.35;
 }
 
@@ -1014,6 +1035,7 @@ p {
 
 .upgrade-row em {
   color: #f0d88d;
+  font-size: clamp(1.04rem, 4.8vw, 1.22rem);
   font-style: normal;
   font-weight: 900;
 }
@@ -1702,14 +1724,14 @@ p {
 }
 
 .bargain-card strong {
-  font-size: 1.04rem;
+  font-size: clamp(1.16rem, 5.2vw, 1.42rem);
   line-height: 1.15;
 }
 
 .bargain-upside,
 .bargain-downside {
   display: block;
-  font-size: 0.92rem;
+  font-size: clamp(1rem, 4.4vw, 1.12rem);
   line-height: 1.4;
 }
 
@@ -1804,6 +1826,12 @@ p {
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: 1rem;
   letter-spacing: 0.02em;
+}
+
+.gold-chip--tutorial {
+  border-radius: 0.45rem;
+  box-shadow: 0 0 0 4px rgba(157, 242, 255, 0.16), 0 0 22px rgba(243, 189, 52, 0.55);
+  animation: gold-chip-focus 1.05s ease-in-out infinite;
 }
 
 .gold-chip .coin-icon {
@@ -2008,15 +2036,15 @@ p {
   animation: coin-fly-to-hud 1.45s cubic-bezier(0.18, 0.86, 0.22, 1) forwards;
 }
 
-.coin-burst span:nth-child(1) { --coin-x: -8.5rem; --coin-y: -15rem; --burst-x: -3.4rem; --burst-y: -3.1rem; animation-delay: 0ms; }
-.coin-burst span:nth-child(2) { --coin-x: -7rem; --coin-y: -13.6rem; --burst-x: 2.8rem; --burst-y: -3.6rem; animation-delay: 45ms; }
-.coin-burst span:nth-child(3) { --coin-x: -9.4rem; --coin-y: -12.8rem; --burst-x: -4.5rem; --burst-y: 0.2rem; animation-delay: 90ms; }
-.coin-burst span:nth-child(4) { --coin-x: -6.2rem; --coin-y: -15.4rem; --burst-x: 4.1rem; --burst-y: 0.4rem; animation-delay: 135ms; }
-.coin-burst span:nth-child(5) { --coin-x: -8rem; --coin-y: -11.9rem; --burst-x: -1rem; --burst-y: 3.4rem; animation-delay: 180ms; }
-.coin-burst span:nth-child(6) { --coin-x: -5.5rem; --coin-y: -12.6rem; --burst-x: 1.6rem; --burst-y: 3.2rem; animation-delay: 225ms; }
-.coin-burst span:nth-child(7) { --coin-x: -10rem; --coin-y: -14.4rem; --burst-x: -5.4rem; --burst-y: -2rem; animation-delay: 270ms; }
-.coin-burst span:nth-child(8) { --coin-x: -6.8rem; --coin-y: -16rem; --burst-x: 5.3rem; --burst-y: -2rem; animation-delay: 315ms; }
-.coin-burst span:nth-child(9) { --coin-x: -8.9rem; --coin-y: -13.8rem; --burst-x: 0; --burst-y: -5rem; animation-delay: 360ms; }
+.coin-burst span:nth-child(1) { --coin-x: -0.85rem; --coin-y: -15rem; --burst-x: -3.4rem; --burst-y: -3.1rem; animation-delay: 0ms; }
+.coin-burst span:nth-child(2) { --coin-x: 0.25rem; --coin-y: -14.2rem; --burst-x: 2.8rem; --burst-y: -3.6rem; animation-delay: 45ms; }
+.coin-burst span:nth-child(3) { --coin-x: -1.15rem; --coin-y: -13.4rem; --burst-x: -4.5rem; --burst-y: 0.2rem; animation-delay: 90ms; }
+.coin-burst span:nth-child(4) { --coin-x: 0.95rem; --coin-y: -15.4rem; --burst-x: 4.1rem; --burst-y: 0.4rem; animation-delay: 135ms; }
+.coin-burst span:nth-child(5) { --coin-x: -0.35rem; --coin-y: -12.8rem; --burst-x: -1rem; --burst-y: 3.4rem; animation-delay: 180ms; }
+.coin-burst span:nth-child(6) { --coin-x: 0.65rem; --coin-y: -13.2rem; --burst-x: 1.6rem; --burst-y: 3.2rem; animation-delay: 225ms; }
+.coin-burst span:nth-child(7) { --coin-x: -1.35rem; --coin-y: -14.7rem; --burst-x: -5.4rem; --burst-y: -2rem; animation-delay: 270ms; }
+.coin-burst span:nth-child(8) { --coin-x: 1.25rem; --coin-y: -16rem; --burst-x: 5.3rem; --burst-y: -2rem; animation-delay: 315ms; }
+.coin-burst span:nth-child(9) { --coin-x: 0; --coin-y: -14rem; --burst-x: 0; --burst-y: -5rem; animation-delay: 360ms; }
 
 .reward-chest {
   position: absolute;
@@ -2517,6 +2545,16 @@ p {
 @keyframes tutorial-door-pulse {
   0%, 100% { box-shadow: 0 8px 0 #070508, 0 0 0 0 rgba(157, 242, 255, 0.55); }
   50% { box-shadow: 0 8px 0 #070508, 0 0 0 7px rgba(157, 242, 255, 0.12); }
+}
+
+@keyframes tutorial-focus-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.16); }
+}
+
+@keyframes gold-chip-focus {
+  0%, 100% { filter: brightness(1); transform: translateY(0); }
+  50% { filter: brightness(1.18); transform: translateY(-1px); }
 }
 
 .door-room--tutorial {

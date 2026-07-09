@@ -17,6 +17,9 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
   const lowHealth = state.player.hp <= state.player.maxHp * 0.3;
   const frozen = state.frozenUntil > Date.now();
   const hurtNonce = state.feedback?.kind === "enemy" ? state.feedback.nonce : null;
+  const highlightEnemyHealth = state.tutorial === "finish" || state.tutorial === "killEnemy";
+  const highlightPlayerHealth = state.tutorial === "enemyHit";
+  const guidePath = state.tutorial === "swipe" || state.tutorial === "killEnemy" ? state.puzzle?.answerPath : null;
   const startHintId = useMemo(() => {
     if (!state.puzzle || state.player.oracleLensChance <= 0) return null;
     return Math.random() < state.player.oracleLensChance ? state.puzzle.answerPath[0] : null;
@@ -26,13 +29,20 @@ export function CombatView({ state, soundLevel, onPause, onCycleSoundLevel, onSu
     <div className={["game-screen", lowHealth ? "game-screen--danger" : "", hurtNonce ? "game-screen--hurt" : ""].filter(Boolean).join(" ")}>
       <Hud state={state} soundLevel={soundLevel} onPause={onPause} onCycleSoundLevel={onCycleSoundLevel} />
       <RewardCue feedback={state.feedback} />
-      <RoomScene enemy={state.enemy} feedback={state.feedback} lowHealth={lowHealth} frozen={frozen} />
+      <RoomScene
+        enemy={state.enemy}
+        feedback={state.feedback}
+        lowHealth={lowHealth}
+        frozen={frozen}
+        highlightEnemyHealth={highlightEnemyHealth}
+      />
       {state.puzzle && (
         <MathGrid
           player={state.player}
           puzzle={state.puzzle}
           startHintId={startHintId}
-          guidePath={state.tutorial === "swipe" ? state.puzzle.answerPath : null}
+          guidePath={guidePath}
+          highlightPlayerHealth={highlightPlayerHealth}
           onSubmitPath={onSubmitPath}
         />
       )}

@@ -15,7 +15,7 @@ export type ItemId =
   | "maxHp"
   | "goldBonus"
   | "longEquation";
-export type TutorialStep = "swipe" | "finish" | "enemyHit" | "door" | "shop";
+export type TutorialStep = "swipe" | "finish" | "enemyHit" | "killEnemy" | "gold" | "door" | "shop";
 export type GamePhase =
   | "start"
   | "floorIntro"
