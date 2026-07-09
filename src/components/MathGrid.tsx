@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent, type Touch, type TouchEvent } from "react";
 import type { GridTile, Puzzle } from "../game/types";
 
 interface MathGridProps {
@@ -7,12 +7,20 @@ interface MathGridProps {
   onSubmitPath: (path: string[]) => void;
 }
 
+interface DragPoint {
+  x: number;
+  y: number;
+}
+
+const dragSampleSpacing = 12;
+
 export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
   const [selected, setSelected] = useState<string[]>([]);
   const selectedRef = useRef<string[]>([]);
   const activeInput = useRef<"pointer" | "touch" | null>(null);
   const activePointerId = useRef<number | null>(null);
   const activeTouchId = useRef<number | null>(null);
+  const lastPoint = useRef<DragPoint | null>(null);
   const tileMap = useMemo(() => new Map(puzzle.tiles.map((tile) => [tile.id, tile])), [puzzle.tiles]);
 
   useEffect(() => {
@@ -46,7 +54,8 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
     setSelected(path);
   }
 
-  function startSwipe(tile: GridTile) {
+  function startSwipe(tile: GridTile, point: DragPoint) {
+    lastPoint.current = point;
     setSelectedPath(tile.type === "number" ? [tile.id] : []);
   }
 
@@ -54,6 +63,7 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
     activeInput.current = null;
     activePointerId.current = null;
     activeTouchId.current = null;
+    lastPoint.current = null;
     setSelectedPath([]);
   }
 
@@ -62,14 +72,13 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
     event.preventDefault();
     activeInput.current = "pointer";
     activePointerId.current = event.pointerId;
-    startSwipe(tile);
+    startSwipe(tile, { x: event.clientX, y: event.clientY });
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
     if (activeInput.current !== "pointer" || activePointerId.current !== event.pointerId) return;
     event.preventDefault();
-    const id = findTileFromPoint(event.clientX, event.clientY);
-    if (id) addTile(id);
+    addTilesBetween({ x: event.clientX, y: event.clientY });
   }
 
   function finishPointerSwipe(event: PointerEvent<HTMLDivElement>) {
@@ -86,7 +95,7 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
     event.preventDefault();
     activeInput.current = "touch";
     activeTouchId.current = touch.identifier;
-    startSwipe(tile);
+    startSwipe(tile, { x: touch.clientX, y: touch.clientY });
   }
 
   function handleTouchMove(event: TouchEvent<HTMLDivElement>) {
@@ -95,8 +104,7 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
     if (!touch) return;
 
     event.preventDefault();
-    const id = findTileFromPoint(touch.clientX, touch.clientY);
-    if (id) addTile(id);
+    addTilesBetween({ x: touch.clientX, y: touch.clientY });
   }
 
   function finishTouchSwipe(event: TouchEvent<HTMLDivElement>) {
@@ -105,7 +113,7 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
     finishSwipe();
   }
 
-  function findActiveTouch(touches: TouchList): Touch | null {
+  function findActiveTouch(touches: TouchEvent<Element>["changedTouches"]): Touch | null {
     for (let index = 0; index < touches.length; index += 1) {
       const touch = touches.item(index);
       if (touch?.identifier === activeTouchId.current) return touch;
@@ -115,8 +123,25 @@ export function MathGrid({ puzzle, startHintId, onSubmitPath }: MathGridProps) {
 
   function finishSwipe() {
     const path = selectedRef.current;
-    if (activeInput.current && path.length > 0) onSubmitPath(path);
+    if (activeInput.current && path.length >= 3) onSubmitPath(path);
     resetSwipe();
+  }
+
+  function addTilesBetween(point: DragPoint) {
+    const previous = lastPoint.current ?? point;
+    const distance = Math.hypot(point.x - previous.x, point.y - previous.y);
+    const steps = Math.max(1, Math.ceil(distance / dragSampleSpacing));
+
+    for (let step = 1; step <= steps; step += 1) {
+      const progress = step / steps;
+      const id = findTileFromPoint(
+        previous.x + (point.x - previous.x) * progress,
+        previous.y + (point.y - previous.y) * progress,
+      );
+      if (id) addTile(id);
+    }
+
+    lastPoint.current = point;
   }
 
   return (
