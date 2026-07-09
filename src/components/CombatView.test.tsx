@@ -1,6 +1,6 @@
 // Verifies combat tutorial cues render the guidance and highlights needed for onboarding.
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CombatView } from "./CombatView";
 import type { GameState } from "../game/types";
 
@@ -19,6 +19,7 @@ const combatState: GameState = {
     barbedArmor: 0,
     swordDamage: 2,
     oracleLensChance: 0,
+    oraclePathNumbers: 0,
     negativesUnlocked: false,
     extraDamageTaken: 0,
     lifesteal: 0,
@@ -90,5 +91,27 @@ describe("CombatView tutorial cues", () => {
 
     expect(html).toContain("hud--gold-tutorial");
     expect(html).toContain("gold-chip--tutorial");
+  });
+
+  it("shows the upgraded Oracle Lens two-number path when its 25% chance triggers", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    const html = renderToStaticMarkup(
+      <CombatView
+        state={{
+          ...combatState,
+          tutorial: null,
+          player: { ...combatState.player, oracleLensChance: 0.25, oraclePathNumbers: 2, items: { oracleLens: 2 } },
+        }}
+        soundLevel="mute"
+        onPause={() => undefined}
+        onCycleSoundLevel={() => undefined}
+        onSubmitPath={() => undefined}
+      />,
+    );
+
+    expect(html.match(/is-start-hint/g)).toHaveLength(3);
+    expect(html).toContain("<b>Start</b>");
+    vi.restoreAllMocks();
   });
 });

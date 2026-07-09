@@ -5,7 +5,7 @@ import { SwipeGuide } from "./SwipeGuide";
 interface MathGridProps {
   player: PlayerState;
   puzzle: Puzzle;
-  startHintId?: string | null;
+  oracleHintPath?: string[] | null;
   guidePath?: string[] | null;
   highlightTarget?: boolean;
   highlightPlayerHealth?: boolean;
@@ -22,7 +22,7 @@ const dragSampleSpacing = 12;
 export function MathGrid({
   player,
   puzzle,
-  startHintId,
+  oracleHintPath,
   guidePath,
   highlightTarget = false,
   highlightPlayerHealth = false,
@@ -36,7 +36,7 @@ export function MathGrid({
   const lastPoint = useRef<DragPoint | null>(null);
   const tileMap = useMemo(() => new Map(puzzle.tiles.map((tile) => [tile.id, tile])), [puzzle.tiles]);
   const hpPercent = Math.max(0, Math.round((player.hp / player.maxHp) * 100));
-  const displayedHp = player.temporaryHp > 0 ? `${player.hp}+${player.temporaryHp}` : String(player.hp);
+  const shieldPercent = Math.min(100, Math.max(0, Math.round((player.temporaryHp / player.maxHp) * 100)));
 
   useEffect(() => {
     resetSwipe();
@@ -167,17 +167,26 @@ export function MathGrid({
       </div>
       <div
         className={["player-health-card", highlightPlayerHealth ? "player-health-card--tutorial" : ""].filter(Boolean).join(" ")}
-        aria-label={`Player HP ${player.hp} of ${player.maxHp}`}
+        aria-label={`Player HP ${player.hp} of ${player.maxHp}${player.temporaryHp > 0 ? `, Shield ${player.temporaryHp}` : ""}`}
       >
         <div className="player-health-label">
           <span>Player HP</span>
           <strong>
-            {displayedHp}/{player.maxHp}
+            {player.hp}/{player.maxHp}
           </strong>
         </div>
         <div className="player-health-track">
           <div className="player-health-fill" style={{ width: `${hpPercent}%` }} />
         </div>
+        {player.temporaryHp > 0 && (
+          <div className="player-shield-row" aria-label={`Shield ${player.temporaryHp}`}>
+            <span className="item-icon item-icon--shield" aria-hidden="true" />
+            <div className="player-shield-track">
+              <div className="player-shield-fill" style={{ width: `${shieldPercent}%` }} />
+            </div>
+            <strong>{player.temporaryHp}</strong>
+          </div>
+        )}
         {player.lifesteal > 0 && (
           <div className="item-badge" aria-label={`Lifesteal heals ${player.lifesteal} HP per hit`}>
             Lifesteal +{player.lifesteal}
@@ -198,12 +207,13 @@ export function MathGrid({
         {puzzle.tiles.map((tile) => {
           const selectedIndex = selected.indexOf(tile.id);
           const isSelected = selectedIndex >= 0;
-          const isStartHint = tile.id === startHintId;
+          const oracleHintIndex = oracleHintPath?.indexOf(tile.id) ?? -1;
+          const isOracleHint = oracleHintIndex >= 0;
           return (
             <button
               key={tile.id}
               type="button"
-              className={["math-tile", `math-tile--${tile.type}`, isSelected ? "is-selected" : "", isStartHint ? "is-start-hint" : ""]
+              className={["math-tile", `math-tile--${tile.type}`, isSelected ? "is-selected" : "", isOracleHint ? "is-start-hint" : ""]
                 .filter(Boolean)
                 .join(" ")}
               data-tile-id={tile.id}
@@ -211,7 +221,7 @@ export function MathGrid({
               onTouchStart={(event) => handleTouchStart(event, tile)}
             >
               <span>{tile.value}</span>
-              {isStartHint && !isSelected && <b>Start</b>}
+              {oracleHintIndex === 0 && !isSelected && <b>Start</b>}
               {isSelected && <em>{selectedIndex + 1}</em>}
             </button>
           );

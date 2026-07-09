@@ -693,6 +693,39 @@ button {
   transition: width 180ms ease;
 }
 
+.player-shield-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+  margin-top: 0.42rem;
+}
+
+.player-shield-row .item-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.player-shield-track {
+  height: 0.68rem;
+  background: #09070b;
+  border: 2px solid #130b10;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.08);
+}
+
+.player-shield-fill {
+  height: 100%;
+  min-width: 0.2rem;
+  background: linear-gradient(90deg, #79818c, #d7dde4 52%, #f6f8fb);
+  transition: width 180ms ease;
+}
+
+.player-shield-row strong {
+  color: #eef2f7;
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
 .math-grid {
   display: grid;
   gap: 0.48rem;
@@ -960,7 +993,9 @@ p {
 
 .shop-room {
   align-content: start;
-  padding-top: 1.2rem;
+  gap: 0.7rem;
+  padding: 0.8rem;
+  overflow: hidden;
 }
 
 @media (max-height: 640px) {
@@ -993,7 +1028,7 @@ p {
     padding: 0.38rem 0.52rem;
   }
 
-  .shop-room .player-vitals span {
+  .shop-room .player-vitals > span {
     font-size: 0.64rem;
   }
 
@@ -1109,7 +1144,7 @@ p {
   transform: translateX(-50%);
 }
 
-.player-vitals span {
+.player-vitals > span {
   color: var(--text-warm);
   font-size: 0.78rem;
   font-weight: 900;
@@ -1136,15 +1171,44 @@ p {
   background: linear-gradient(90deg, #d64b3d, #e1b94b 42%, #48b36b);
 }
 
+.player-vitals__shield {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.player-vitals__shield .item-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.player-vitals__shield-track {
+  height: 0.52rem;
+  background: #09070b;
+  border: 1px solid #130b10;
+}
+
+.player-vitals__shield-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #7b8390, #d7dde4 52%, #f6f8fb);
+}
+
+.player-vitals__shield strong {
+  font-size: 0.82rem;
+}
+
 .upgrade-row {
   position: relative;
   width: 100%;
-  min-height: 4.35rem;
+  min-height: 3.18rem;
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0.7rem;
+  gap: 0.58rem;
   align-items: center;
-  padding: 0.72rem 0.8rem;
+  padding: 0.5rem 0.65rem;
   color: #fff8e7;
   text-align: left;
   background: #282230;
@@ -1186,15 +1250,15 @@ p {
 }
 
 .upgrade-row strong {
-  font-size: clamp(1.08rem, 5vw, 1.3rem);
+  font-size: clamp(0.94rem, 4.4vw, 1.12rem);
   line-height: 1.12;
 }
 
 .upgrade-row small {
-  margin-top: 0.16rem;
+  margin-top: 0.1rem;
   color: var(--text-body);
-  font-size: clamp(0.98rem, 4.2vw, 1.08rem);
-  line-height: 1.35;
+  font-size: clamp(0.78rem, 3.5vw, 0.94rem);
+  line-height: 1.22;
 }
 
 .upgrade-row:disabled small {
@@ -1203,7 +1267,7 @@ p {
 
 .upgrade-row em {
   color: #f0d88d;
-  font-size: clamp(1.04rem, 4.8vw, 1.22rem);
+  font-size: clamp(0.9rem, 4vw, 1.05rem);
   font-style: normal;
   font-weight: 900;
 }
@@ -1852,9 +1916,9 @@ p {
   height: 100%;
   display: grid;
   align-content: start;
-  gap: 0.9rem;
-  padding: 1rem;
-  overflow-y: auto;
+  gap: 0.58rem;
+  padding: 0.75rem;
+  overflow: hidden;
   background:
     radial-gradient(circle at 50% 8rem, rgba(179, 60, 126, 0.26), transparent 12rem),
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 2px, transparent 2px) 0 0 / 34px 34px,
@@ -1863,8 +1927,8 @@ p {
 
 .altar-sprite {
   position: relative;
-  width: 5.4rem;
-  height: 5.4rem;
+  width: 4.35rem;
+  height: 4.35rem;
   justify-self: center;
   display: grid;
   place-items: center;
@@ -1874,8 +1938,8 @@ p {
 }
 
 .altar-sprite span {
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 1.9rem;
+  height: 1.9rem;
   background: #d64b8b;
   border: 4px solid #150b14;
   transform: rotate(45deg);
@@ -1888,7 +1952,7 @@ p {
 
 .bargain-copy span {
   color: #ff9aca;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1897,20 +1961,20 @@ p {
 .bargain-copy h1 {
   margin: 0.15rem 0 0;
   color: var(--text-primary);
-  font-size: clamp(2rem, 9vw, 3.3rem);
+  font-size: clamp(1.55rem, 7.6vw, 2.5rem);
   line-height: 1.04;
 }
 
 .bargain-list {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.42rem;
 }
 
 .bargain-card {
   width: 100%;
   display: grid;
-  gap: 0.34rem;
-  padding: 0.78rem;
+  gap: 0.22rem;
+  padding: 0.52rem 0.62rem;
   color: #fff8e7;
   text-align: left;
   background: linear-gradient(180deg, #312438, #1d1725);
@@ -1920,15 +1984,15 @@ p {
 }
 
 .bargain-card strong {
-  font-size: clamp(1.16rem, 5.2vw, 1.42rem);
+  font-size: clamp(0.98rem, 4.6vw, 1.16rem);
   line-height: 1.15;
 }
 
 .bargain-upside,
 .bargain-downside {
   display: block;
-  font-size: clamp(1rem, 4.4vw, 1.12rem);
-  line-height: 1.4;
+  font-size: clamp(0.78rem, 3.55vw, 0.92rem);
+  line-height: 1.2;
 }
 
 .bargain-upside {

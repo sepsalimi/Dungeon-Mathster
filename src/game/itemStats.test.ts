@@ -13,6 +13,7 @@ const basePlayer: PlayerState = {
   barbedArmor: 0,
   swordDamage: 2,
   oracleLensChance: 0,
+  oraclePathNumbers: 0,
   negativesUnlocked: false,
   extraDamageTaken: 0,
   lifesteal: 0,
@@ -40,5 +41,21 @@ describe("item tooltip stats", () => {
   it("shows stacked armor reduction as one total", () => {
     const player = { ...basePlayer, damageReductionArmor: 2, items: { damageReductionArmor: 2 } };
     expect(getItemStatLine("damageReductionArmor", player)).toBe("-2 damage taken");
+  });
+
+  it("shows shield HP for the renamed temporary armor item", () => {
+    const player = { ...basePlayer, temporaryHp: 25, items: { temporaryArmor: 1 } };
+    expect(getItemTooltipContent("temporaryArmor", player)).toEqual({
+      name: "Shield",
+      description: "Gain temporary shield HP.",
+      statLine: "25 shield HP",
+      count: 1,
+      icon: "shield",
+    });
+  });
+
+  it("shows when Oracle Lens reveals a two-number path", () => {
+    const player = { ...basePlayer, oracleLensChance: 0.25, oraclePathNumbers: 2, items: { oracleLens: 2 } };
+    expect(getItemStatLine("oracleLens", player)).toBe("25% two-number path");
   });
 });

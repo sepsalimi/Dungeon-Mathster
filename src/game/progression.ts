@@ -51,7 +51,7 @@ const bossTemplates: BossDefinition[] = [
     hp: 22,
     damage: 7,
     intro: "Many heads, one order. Keep your operations clean or lose the thread.",
-    item: "goldBonus",
+    item: "oracleLens",
   },
   {
     name: "The Bedmas King",
@@ -65,7 +65,7 @@ const bossTemplates: BossDefinition[] = [
 export const itemDefinitions: Record<ItemId, ItemDefinition> = {
   oracleLens: {
     name: "Oracle Lens",
-    description: "Chance to glow the first answer tile.",
+    description: "Chance to reveal the start of the answer path.",
     icon: "eye",
   },
   glassBlade: {
@@ -89,9 +89,9 @@ export const itemDefinitions: Record<ItemId, ItemDefinition> = {
     icon: "shield",
   },
   temporaryArmor: {
-    name: "Armor",
-    description: "Gain temporary HP.",
-    icon: "helm",
+    name: "Shield",
+    description: "Gain temporary shield HP.",
+    icon: "shield",
   },
   barbedArmor: {
     name: "Barbed Armor",
@@ -163,6 +163,22 @@ export function applyBossItem(player: PlayerState, floor: number): { player: Pla
   }
   if (item === "sword") {
     rewardedPlayer = { ...rewardedPlayer, swordDamage: rewardedPlayer.swordDamage + 1 };
+  }
+  if (item === "oracleLens") {
+    const hadOracleLens = getItemCount(player, "oracleLens") > 0;
+    rewardedPlayer = {
+      ...rewardedPlayer,
+      oracleLensChance: Math.max(rewardedPlayer.oracleLensChance, 0.25),
+      oraclePathNumbers: Math.max(rewardedPlayer.oraclePathNumbers, hadOracleLens ? 2 : 1),
+    };
+
+    if (hadOracleLens) {
+      return {
+        player: rewardedPlayer,
+        message: "Oracle Lens upgraded. 25% of answers reveal a two-number path.",
+        item,
+      };
+    }
   }
 
   return { player: rewardedPlayer, message: `${itemDefinitions[item].name} found.`, item };

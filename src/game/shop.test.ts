@@ -14,6 +14,7 @@ function makePlayer(overrides: Partial<PlayerState> = {}): PlayerState {
     barbedArmor: 0,
     swordDamage: 2,
     oracleLensChance: 0,
+    oraclePathNumbers: 0,
     negativesUnlocked: false,
     extraDamageTaken: 0,
     lifesteal: 0,
@@ -35,11 +36,12 @@ describe("bargain options", () => {
     expect(item).toBe("oracleLens");
   });
 
-  it("Oracle Lens costs 20 max HP when negative numbers are already in the grid", () => {
+  it("Oracle Lens stays at 25% when negative numbers are already in the grid", () => {
     const first = applyBargain(makePlayer(), "oracleLens");
     const { player, message } = applyBargain(first.player, "oracleLens");
 
-    expect(player.oracleLensChance).toBe(0.5);
+    expect(player.oracleLensChance).toBe(0.25);
+    expect(player.oraclePathNumbers).toBe(1);
     expect(player.negativesUnlocked).toBe(true);
     expect(player.maxHp).toBe(80);
     expect(player.hp).toBe(80);

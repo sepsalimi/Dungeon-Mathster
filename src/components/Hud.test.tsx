@@ -19,6 +19,7 @@ const hudState: GameState = {
     barbedArmor: 0,
     swordDamage: 2,
     oracleLensChance: 0,
+    oraclePathNumbers: 0,
     negativesUnlocked: false,
     extraDamageTaken: 0,
     lifesteal: 2,

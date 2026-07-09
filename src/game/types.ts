@@ -59,6 +59,7 @@ export interface PlayerState {
   barbedArmor: number;
   swordDamage: number;
   oracleLensChance: number;
+  oraclePathNumbers: number;
   negativesUnlocked: boolean;
   extraDamageTaken: number;
   lifesteal: number;
