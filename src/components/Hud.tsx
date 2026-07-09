@@ -1,5 +1,8 @@
-import type { GameState, SoundLevel } from "../game/types";
+import { useState } from "react";
+import type { GameState, ItemId, SoundLevel } from "../game/types";
+import { getItemTooltipContent } from "../game/itemStats";
 import { getItemStacks } from "../game/progression";
+import { ItemTooltip } from "./ItemTooltip";
 
 interface HudProps {
   state: GameState;
@@ -17,6 +20,12 @@ const soundLabels: Record<SoundLevel, string> = {
 export function Hud({ state, soundLevel, onPause, onCycleSoundLevel }: HudProps) {
   const items = getItemStacks(state.player);
   const highlightGold = state.tutorial === "gold" || state.tutorial === "shop" || state.tutorial === "healthBought";
+  const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
+  const selectedItem = selectedItemId ? getItemTooltipContent(selectedItemId, state.player) : null;
+
+  const toggleItemDetails = (itemId: ItemId) => {
+    setSelectedItemId((current) => (current === itemId ? null : itemId));
+  };
 
   return (
     <header className={["hud", highlightGold ? "hud--gold-tutorial" : ""].filter(Boolean).join(" ")}>
@@ -32,14 +41,27 @@ export function Hud({ state, soundLevel, onPause, onCycleSoundLevel }: HudProps)
           <small>Items</small>
           <div className="item-icons">
             {items.length === 0 && <span className="item-empty">None</span>}
-            {items.map((item) => (
-              <span key={item.id} className="item-stack" title={`${item.label} x${item.count}`}>
-                <span className={`item-icon item-icon--${item.icon}`} aria-hidden="true" />
-                <b>{item.count}</b>
-              </span>
-            ))}
+            {items.map((item) => {
+              const tooltip = getItemTooltipContent(item.id, state.player);
+              const isSelected = selectedItemId === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={["item-stack", isSelected ? "item-stack--selected" : ""].filter(Boolean).join(" ")}
+                  aria-label={`${item.label}, ${tooltip.statLine ?? tooltip.description}`}
+                  aria-expanded={isSelected}
+                  onClick={() => toggleItemDetails(item.id)}
+                >
+                  <span className={`item-icon item-icon--${item.icon}`} aria-hidden="true" />
+                  <b>{item.count}</b>
+                </button>
+              );
+            })}
           </div>
         </div>
+        {selectedItem && <ItemTooltip content={selectedItem} onClose={() => setSelectedItemId(null)} />}
       </div>
       <button className="hud-button" type="button" onClick={onCycleSoundLevel} aria-label={soundLabels[soundLevel]}>
         <span className={`sound-icon sound-icon--${soundLevel}`} aria-hidden="true">
